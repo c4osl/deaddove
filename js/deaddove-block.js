@@ -7,56 +7,52 @@ registerBlockType('cw/content-warning', {
     title: 'Content Warning',
     icon: 'warning',
     category: 'design',
-
     attributes: {
-        tags: {
+        terms: {
             type: 'array',
             default: [],
         },
     },
-
     edit: function ({ attributes, setAttributes }) {
-        const { tags } = attributes;
-        const [availableTags, setAvailableTags] = useState([]);
+        const { terms } = attributes;
+        const [availableTerms, setAvailableTerms] = useState([]);
 
-        // Fetch available post tags via REST API.
+        // Fetch available terms via REST API.
         useEffect(() => {
-            wp.apiFetch({ path: '/wp/v2/tags' }).then((tags) => {
-                setAvailableTags(tags);
+            wp.apiFetch({ path: '/wp/v2/content_warning' }).then((terms) => {
+                setAvailableTerms(terms);
             });
         }, []);
 
-        const tagOptions = availableTags.map((tag) => ({
-            value: tag.id,
-            label: tag.name,
+        const termOptions = availableTerms.map((term) => ({
+            value: term.id,
+            label: term.name,
         }));
 
-        const toggleTag = (tagId) => {
+        const toggleTerm = (termId) => {
             setAttributes({
-                tags: tags.includes(tagId)
-                    ? tags.filter((id) => id !== tagId)
-                    : [...tags, tagId],
+                terms: terms.includes(termId)
+                    ? terms.filter((id) => id !== termId)
+                    : [...terms, termId],
             });
         };
 
         return wp.element.createElement(
             'div',
-            { className: 'deaddove-modal-wrapper editor-only' }, // Add class for editor view only.
-            wp.element.createElement('h4', null, 'Select Tags'),
-            tagOptions.map((tag) =>
+            { className: 'deaddove-modal-wrapper editor-only' },
+            wp.element.createElement('h4', null, 'Select Terms'),
+            termOptions.map((term) =>
                 wp.element.createElement(CheckboxControl, {
-                    key: tag.value,
-                    label: tag.label,
-                    checked: tags.includes(tag.value),
-                    onChange: () => toggleTag(tag.value),
+                    key: term.value,
+                    label: term.label,
+                    checked: terms.includes(term.value),
+                    onChange: () => toggleTerm(term.value),
                 })
             ),
-            wp.element.createElement(InnerBlocks) // Enable nested blocks.
+            wp.element.createElement(InnerBlocks)
         );
     },
-
     save: () => {
-        // Minimal save function to store nested content without issues.
         return wp.element.createElement(InnerBlocks.Content);
     },
 });
