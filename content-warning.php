@@ -21,13 +21,15 @@ add_action('wp_enqueue_scripts', 'deaddove_enqueue_assets');
 function deaddove_register_taxonomy() {
     register_taxonomy('content_warning', 'post', [
         'label' => 'Content Warnings',
+        'public' => true,
+        'show_in_rest' => true,
+        'show_ui' => true,
         'rewrite' => ['slug' => 'content-warning'],
         'hierarchical' => false,
     ]);
 }
 add_action('init', 'deaddove_register_taxonomy');
 
-// Enqueue the JavaScript file for the frontend behavior if needed
 // Enqueue the JavaScript file for the frontend behavior if needed
 function deaddove_enqueue_modal_script() {
     if (!is_single()) {
@@ -175,7 +177,6 @@ add_action('init', function () {
 });
 
 // Shortcode for custom content warnings
-// Shortcode for custom content warnings
 function deaddove_content_warning_shortcode($atts, $content = null) {
     $atts = shortcode_atts(['tags' => ''], $atts);
     $tags = array_map('trim', explode(',', $atts['tags']));
@@ -230,7 +231,6 @@ function deaddove_settings_page() {
 add_action('admin_menu', 'deaddove_settings_page');
 
 // Settings page HTML
-// Settings page HTML
 function deaddove_settings_page_html() {
     if (isset($_POST['deaddove_save_settings'])) {
         if (isset($_POST['deaddove_nonce'])) {
@@ -282,7 +282,6 @@ function deaddove_settings_page_html() {
     <?php
 }
 
-// User profile settings section
 // User profile settings section
 function deaddove_user_profile_settings($user) {
     $admin_terms = get_option('deaddove_warning_terms', []);
