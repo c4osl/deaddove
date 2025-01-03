@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Dead Dove
  * Description: Content warning plugin that blurs content until the user accepts a disclaimer.
- * Version: 1.0
+ * Version: 1.1
  * License: GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Author: Jeremy Malcolm
@@ -17,6 +17,19 @@ function deaddove_enqueue_assets() {
 }
 add_action('wp_enqueue_scripts', 'deaddove_enqueue_assets');
 
+// Register the custom taxonomy
+function deaddove_register_taxonomy() {
+    register_taxonomy('content_warning', 'post', [
+        'label' => 'Content Warnings',
+        'public' => true,
+        'show_in_rest' => true,
+        'show_ui' => true,
+        'rewrite' => ['slug' => 'content-warning'],
+        'hierarchical' => false,
+    ]);
+}
+add_action('init', 'deaddove_register_taxonomy');
+
 // Enqueue the JavaScript file for the frontend behavior if needed
 function deaddove_enqueue_modal_script() {
     if (!is_single()) {
@@ -25,10 +38,10 @@ function deaddove_enqueue_modal_script() {
 
     global $post;
 
-    // Check if the post has a content warning tag
-    $warning_tags = get_option('deaddove_warning_tags', []);
-    $post_tags = wp_get_post_tags($post->ID, ['fields' => 'slugs']);
-    $has_warning_tag = array_intersect($post_tags, $warning_tags);
+    // Check if the post has a content warning term
+    $warning_terms = get_option('deaddove_warning_terms', []);
+    $post_terms = wp_get_post_terms($post->ID, 'content_warning', ['fields' => 'slugs']);
+    $has_warning_term = array_intersect($post_terms, $warning_terms);
 
     // Check if the post contains the content warning shortcode
     $has_shortcode = has_shortcode($post->post_content, 'content_warning');
@@ -37,7 +50,7 @@ function deaddove_enqueue_modal_script() {
     $has_block = has_block('cw/content-warning', $post);
 
     // Enqueue the script if any trigger is found
-    if ($has_warning_tag || $has_shortcode || $has_block) {
+    if ($has_warning_term || $has_shortcode || $has_block) {
         wp_enqueue_script(
             'deaddove-modal-script',
             plugin_dir_url(__FILE__) . 'js/deaddove-modal.js',
@@ -51,44 +64,39 @@ add_action('wp_enqueue_scripts', 'deaddove_enqueue_modal_script');
 
 // Apply content warnings based on post tags
 function deaddove_filter_content($content) {
-    if (!is_single()) return $content; // Only apply on single posts
+    if (!is_single()) return $content;
 
-    $post_tags = wp_get_post_tags(get_the_ID(), ['fields' => 'slugs']);
-    $admin_tags = get_option('deaddove_warning_tags', []);
-    $user_tags = get_user_meta(get_current_user_id(), 'deaddove_warning_tags', true) ?: $admin_tags;
-    $warning_tags = array_intersect($admin_tags, $user_tags, $post_tags);
+    $post_terms = wp_get_post_terms(get_the_ID(), 'content_warning', ['fields' => 'slugs']);
+    $admin_terms = get_option('deaddove_warning_terms', []);
+    $user_terms = get_user_meta(get_current_user_id(), 'deaddove_warning_terms', true) ?: $admin_terms;
+    $warning_terms = array_intersect($admin_terms, $user_terms, $post_terms);
 
-    if (empty($warning_tags)) return $content; // No matching warning tags
+    if (empty($warning_terms)) return $content;
 
     $warnings = [];
-    foreach ($warning_tags as $tag) {
-        $term = get_term_by('slug', $tag, 'post_tag');
-        if ($term) {
-            $warnings[] = $term->description ?: 'This content requires your agreement to view.';
+    foreach ($warning_terms as $term) {
+        $term_obj = get_term_by('slug', $term, 'content_warning');
+        if ($term_obj) {
+            $warnings[] = $term_obj->description ?: 'This content requires your agreement to view.';
         }
     }
 
     $warning_text = implode('<br><br>', $warnings);
 
-    return '
-        <div class="deaddove-modal-wrapper">
-            <div class="deaddove-modal" style="display:none;">
-                <div class="deaddove-modal-content">
-                    <p>' . $warning_text . '</p>
-                    <div class="modal-buttons">
-                        <button class="deaddove-show-content-btn">Show this content</button>
-                        <button class="deaddove-hide-content-btn">Keep it hidden</button>
+    return '<div class="deaddove-modal-wrapper">
+                <div class="deaddove-modal" style="display:none;">
+                    <div class="deaddove-modal-content">
+                        <p>' . $warning_text . '</p>
+                        <div class="modal-buttons">
+                            <button class="deaddove-show-content-btn">Show this content</button>
+                            <button class="deaddove-hide-content-btn">Keep it hidden</button>
+                        </div>
+                        <small><a href="#deaddove-warning-settings">Modify your content warning settings</a></small>
                     </div>
-                    <small><a href="#deaddove-warning-settings">Modify your content warning settings</a></small>
                 </div>
-            </div>
-            <div class="deaddove-blurred-content deaddove-blur">
-                ' . $content . '
-            </div>
-        </div>';
+                <div class="deaddove-blurred-content deaddove-blur">' . $content . '</div>
+            </div>';
 }
-
-// Add filter to apply the content warning to post content
 add_filter('the_content', 'deaddove_filter_content');
 
 // Enqueue block editor assets
@@ -109,7 +117,7 @@ function deaddove_register_content_warning_block() {
         'editor_script' => 'deaddove-block-script',
         'render_callback' => 'deaddove_render_content_warning_block',
         'attributes' => [
-            'tags' => [
+            'terms' => [
                 'type' => 'array', // Changed to 'array' to allow multiple tags
                 'default' => [],
             ],
@@ -120,17 +128,17 @@ add_action('init', 'deaddove_register_content_warning_block');
 
 // Render callback for the block
 function deaddove_render_content_warning_block($attributes, $content) {
-    $tag_ids = $attributes['tags'] ?? [];
+    $term_ids = $attributes['terms'] ?? [];
 
-    // Retrieve user tag preferences or default ones.
-    $admin_warning_tags = get_option('deaddove_warning_tags', []);
-    $user_tags = get_user_meta(get_current_user_id(), 'deaddove_user_warning_tags', true) ?: $admin_warning_tags;
+    // Retrieve user term preferences or default ones.
+    $admin_warning_terms = get_option('deaddove_warning_terms', []);
+    $user_terms = get_user_meta(get_current_user_id(), 'deaddove_user_warning_terms', true) ?: $admin_warning_terms;
 
     $warning_texts = [];
-    foreach ($tag_ids as $tag_id) {
-        $tag = get_term($tag_id, 'post_tag');
-        if ($tag && in_array($tag->slug, $user_tags)) {
-            $warning_text = $tag->description ?: 'This content requires your agreement to view.';
+    foreach ($term_ids as $term_id) {
+        $term = get_term($term_id, 'content_warning');
+        if ($term && in_array($term->slug, $user_terms)) {
+            $warning_text = $term->description ?: 'This content requires your agreement to view.';
             $warning_texts[] = $warning_text;
         }
     }
@@ -173,14 +181,14 @@ function deaddove_content_warning_shortcode($atts, $content = null) {
     $atts = shortcode_atts(['tags' => ''], $atts);
     $tags = array_map('trim', explode(',', $atts['tags']));
 
-    $admin_warning_tags = get_option('deaddove_warning_tags', []);
-    $user_tags = get_user_meta(get_current_user_id(), 'deaddove_user_warning_tags', true) ?: $admin_warning_tags;
+    $admin_warning_terms = get_option('deaddove_warning_terms', []);
+    $user_terms = get_user_meta(get_current_user_id(), 'deaddove_user_warning_terms', true) ?: $admin_warning_terms;
 
     $warning_texts = [];
-    foreach ($tags as $tag_slug) {
-        $tag = get_term_by('slug', $tag_slug, 'post_tag');
-        if ($tag && in_array($tag_slug, $user_tags)) {
-            $warning_text = $tag->description ?: 'This content requires your agreement to view.';
+    foreach ($tags as $term_slug) {
+        $term = get_term_by('slug', $term_slug, 'content_warning');
+        if ($term && in_array($term_slug, $user_terms)) {
+            $warning_text = $term->description ?: 'This content requires your agreement to view.';
             $warning_texts[] = $warning_text;
         }
     }
@@ -234,40 +242,40 @@ function deaddove_settings_page_html() {
             wp_die('Nonce not found.');
         }
 
-        // Save the selected tags
-        $selected_tags = isset($_POST['deaddove_tags']) 
-            ? array_map('sanitize_text_field', wp_unslash($_POST['deaddove_tags'])) 
+        // Save the selected terms
+        $selected_terms = isset($_POST['deaddove_terms']) 
+            ? array_map('sanitize_text_field', wp_unslash($_POST['deaddove_terms'])) 
             : [];
-        update_option('deaddove_warning_tags', $selected_tags);
+        update_option('deaddove_warning_terms', $selected_terms);
 
-        // Reload the updated tags to reflect changes immediately
-        $selected_tags = get_option('deaddove_warning_tags', []);
+        // Reload the updated terms to reflect changes immediately
+        $selected_terms = get_option('deaddove_warning_terms', []);
         echo '<div class="updated"><p>Settings saved!</p></div>';
     } else {
-        // Load selected tags for the first time when the form is displayed
-        $selected_tags = get_option('deaddove_warning_tags', []);
+        // Load selected terms for the first time when the form is displayed
+        $selected_terms = get_option('deaddove_warning_terms', []);
     }
 
-    $all_tags = get_terms([
-        'taxonomy' => 'post_tag',
-        'hide_empty' => false, // Include unused tags
+    $all_terms = get_terms([
+        'taxonomy' => 'content_warning',
+        'hide_empty' => false, // Include unused terms
     ]);
     ?>
     <div class="wrap">
     <h1>Dead Dove Settings</h1>
     <form method="post" action="">
         <?php wp_nonce_field('deaddove_save_settings_nonce', 'deaddove_nonce'); ?>
-        <label for="deaddove_tags">Select tags that require content warnings:</label>
+        <label for="deaddove_terms">Select terms that require content warnings:</label>
         <div>
-            <?php foreach ($all_tags as $tag) : ?>
+            <?php foreach ($all_terms as $term) : ?>
                 <label>
-                    <input type="checkbox" name="deaddove_tags[]" value="<?php echo esc_attr($tag->slug); ?>"
-                        <?php echo in_array($tag->slug, $selected_tags) ? 'checked' : ''; ?>>
-                    <?php echo esc_html($tag->name); ?>
+                    <input type="checkbox" name="deaddove_terms[]" value="<?php echo esc_attr($term->slug); ?>"
+                        <?php echo in_array($term->slug, $selected_terms) ? 'checked' : ''; ?>>
+                    <?php echo esc_html($term->name); ?>
                 </label><br>
             <?php endforeach; ?>
         </div>
-        <p>Each tag's description will be used as the warning text.</p>
+        <p>Each term's description will be used as the warning text.</p>
         <input type="submit" name="deaddove_save_settings" value="Save Settings">
     </form>
     </div>
@@ -276,25 +284,25 @@ function deaddove_settings_page_html() {
 
 // User profile settings section
 function deaddove_user_profile_settings($user) {
-    $admin_tags = get_option('deaddove_warning_tags', []);
-    $user_tags = get_user_meta($user->ID, 'deaddove_user_warning_tags', true);
-    $user_tags = $user_tags !== '' ? $user_tags : $admin_tags;  // Default to admin tags if user tags are empty
-    $all_tags = get_terms([
-        'taxonomy' => 'post_tag',
-        'hide_empty' => false,  // Include unused tags
+    $admin_terms = get_option('deaddove_warning_terms', []);
+    $user_terms = get_user_meta($user->ID, 'deaddove_user_warning_terms', true);
+    $user_terms = $user_terms !== '' ? $user_terms : $admin_terms;  // Default to admin terms if user terms are empty
+    $all_terms = get_terms([
+        'taxonomy' => 'content_warning',
+        'hide_empty' => false,  // Include unused terms
     ]);
     ?>
     <h3 id="deaddove-warning-settings">Dead Dove Settings</h3>
     <table class="form-table">
         <tr>
-            <th><label for="deaddove_user_tags">Select tags for which a content warning should be shown:</label></th>
+            <th><label for="deaddove_user_terms">Select terms for which a content warning should be shown:</label></th>
             <td>
                 <div>
-                    <?php foreach ($all_tags as $tag) : ?>
+                    <?php foreach ($all_terms as $term) : ?>
                         <label>
-                            <input type="checkbox" name="deaddove_user_tags[]" value="<?php echo esc_attr($tag->slug); ?>"
-                                <?php echo in_array($tag->slug, $user_tags) ? 'checked' : ''; ?>>
-                            <?php echo esc_html($tag->name); ?>
+                            <input type="checkbox" name="deaddove_user_terms[]" value="<?php echo esc_attr($term->slug); ?>"
+                                <?php echo in_array($term->slug, $user_terms) ? 'checked' : ''; ?>>
+                            <?php echo esc_html($term->name); ?>
                         </label><br>
                     <?php endforeach; ?>
                 </div>
@@ -316,12 +324,12 @@ function deaddove_save_user_profile_settings($user_id) {
         return;  // Exit if nonce verification fails.
     }
 
-    // Save selected tags or delete if empty
-    if (isset($_POST['deaddove_user_tags'])) {
-        $selected_tags = array_map('sanitize_text_field', wp_unslash($_POST['deaddove_user_tags']));
-        update_user_meta($user_id, 'deaddove_user_warning_tags', $selected_tags);
+    // Save selected terms or delete if empty
+    if (isset($_POST['deaddove_user_terms'])) {
+        $selected_terms = array_map('sanitize_text_field', wp_unslash($_POST['deaddove_user_terms']));
+        update_user_meta($user_id, 'deaddove_user_warning_terms', $selected_terms);
     } else {
-        delete_user_meta($user_id, 'deaddove_user_warning_tags');  // Clear settings if no tags are selected
+        delete_user_meta($user_id, 'deaddove_user_warning_terms');  // Clear settings if no terms are selected
     }
 }
 add_action('personal_options_update', 'deaddove_save_user_profile_settings');
