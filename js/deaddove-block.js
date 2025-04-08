@@ -7,59 +7,66 @@ registerBlockType('cw/content-warning', {
     title: 'Content Warning',
     icon: 'warning',
     category: 'design',
+
     attributes: {
-        terms: {
+        tags: {
             type: 'array',
             default: [],
         },
     },
-    edit: function ({ attributes, setAttributes }) {
-        const { terms } = attributes;
-        const [availableTerms, setAvailableTerms] = useState([]);
 
-        // Fetch available terms via REST API.
+    edit: function ({ attributes, setAttributes }) {
+        const { tags } = attributes;
+        const [availableTags, setAvailableTags] = useState([]);
+
+        // Fetch available post tags via REST API.
         useEffect(() => {
-            wp.apiFetch({ path: '/wp/v2/content_warning' }).then((terms) => {
-                setAvailableTerms(terms);
+            wp.apiFetch({ path: '/wp/v2/tags' }).then((tags) => {
+                setAvailableTags(tags);
             });
         }, []);
 
-        const termOptions = availableTerms.map((term) => ({
-            value: term.id,
-            label: term.name,
+        const tagOptions = availableTags.map((tag) => ({
+            value: tag.id,
+            label: tag.name,
         }));
 
-        const toggleTerm = (termId) => {
+        const toggleTag = (tagId) => {
             setAttributes({
-                terms: terms.includes(termId)
-                    ? terms.filter((id) => id !== termId)
-                    : [...terms, termId],
+                tags: tags.includes(tagId)
+                    ? tags.filter((id) => id !== tagId)
+                    : [...tags, tagId],
             });
         };
 
         return wp.element.createElement(
             'div',
-            { className: 'deaddove-modal-wrapper editor-only' },
-            wp.element.createElement('h4', null, 'Select Terms'),
-            termOptions.map((term) =>
+            { className: 'deaddove-modal-wrapper editor-only' }, // Add class for editor view only.
+            wp.element.createElement('h4', null, 'Select Tags'),
+            tagOptions.map((tag) =>
                 wp.element.createElement(CheckboxControl, {
-                    key: term.value,
-                    label: term.label,
-                    checked: terms.includes(term.value),
-                    onChange: () => toggleTerm(term.value),
+                    key: tag.value,
+                    label: tag.label,
+                    checked: tags.includes(tag.value),
+                    onChange: () => toggleTag(tag.value),
                 })
             ),
-            wp.element.createElement(InnerBlocks)
+            wp.element.createElement(InnerBlocks) // Enable nested blocks.
         );
     },
+
     save: () => {
+        // Minimal save function to store nested content without issues.
         return wp.element.createElement(InnerBlocks.Content);
     },
+
+    
 });
 
 // Initialize listeners on DOMContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
     console.log("Initializing modal listeners...");
+    console.log("hello file");
     initializeModalListeners();
 });
 
