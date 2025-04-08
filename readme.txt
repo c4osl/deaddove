@@ -1,10 +1,10 @@
 === Dead Dove ===  
-Contributors: jeremy-malcolm  
-Donate link: https://buy.stripe.com/eVa6q4d3QboKexqaEE
+Contributors: c4osl
+Donate link: https://c4osl.org/support-us/
 Tags: content warning, sensitive content, shortcode, tags  
 Requires at least: 5.0  
-Tested up to: 6.6  
-Stable tag: 1.1  
+Tested up to: 6.8  
+Stable tag: 1.2  
 Requires PHP: 7.2  
 License: GPLv2 or later  
 License URI: https://www.gnu.org/licenses/gpl-2.0.html  
@@ -86,6 +86,9 @@ A: Yes, you can.
 4. [User settings]![screenshot-4](assets/screenshot-4.png) 
 
 == Changelog ==
+
+### Version 1.2
+- Supports Buddyboss
 
 ### Version 1.1
 - Moved from using post tags to a custom taxonomy for identifying terms that receive a warning.
