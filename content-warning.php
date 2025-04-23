@@ -827,7 +827,8 @@ function deaddove_add_buddyboss_profile_tab() {
         'position' => 60,
         'show_for_displayed_user' => true,
         'screen_function' => 'deaddove_buddyboss_settings_page',
-        'default_subnav_slug' => 'content-warning-settings'
+        'default_subnav_slug' => 'content-warning-settings',
+        'icon' => 'dashicons-warning'
     ]);
 
     // Add settings sub-item
