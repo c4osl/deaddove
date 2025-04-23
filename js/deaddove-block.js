@@ -21,7 +21,7 @@ registerBlockType('cw/content-warning', {
 
         // Fetch available post tags via REST API.
         useEffect(() => {
-            wp.apiFetch({ path: '/wp/v2/tags' }).then((tags) => {
+            wp.apiFetch({ path: '/wp/v2/content_warning' }).then((tags) => {
                 setAvailableTags(tags);
             });
         }, []);

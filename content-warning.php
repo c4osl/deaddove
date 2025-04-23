@@ -186,7 +186,7 @@ function deaddove_content_warning_shortcode($atts, $content = null) {
 
     $warning_texts = [];
     foreach ($tags as $tag_slug) {
-        $tag = get_term_by('slug', $tag_slug, 'post_tag');
+        $tag = get_term_by('slug', $tag_slug, 'content_warning');
         if ($tag && in_array($tag_slug, $user_tags)) {
             $warning_text = $tag->description ?: 'This content requires your agreement to view.';
             $warning_texts[] = $warning_text;
@@ -777,7 +777,7 @@ function get_user_used_tags($user_id) {
     
     if (!$posts) return [];
 
-    $tags = wp_get_object_terms($posts, 'post_tag', ['fields' => 'id=>name']);
+    $tags = wp_get_object_terms($posts, 'content_warning', ['fields' => 'id=>name']);
 
     if (!$tags || is_wp_error($tags)) return [];
 
@@ -1029,7 +1029,7 @@ function deaddove_get_post_description() {
             $tagDescriptions = [];
             if (!empty($matching_tags)) {
                 foreach($matching_tags as $tag_slug){
-                    $tag = get_term_by('slug', $tag_slug, 'post_tag'); // Slug se tag details lo
+                    $tag = get_term_by('slug', $tag_slug, 'content_warning'); // Slug se tag details lo
                     if ($tag && !is_wp_error($tag) && !empty($tag->description)) {
                         $tagDescriptions[] = $tag->description;
                     }
@@ -1147,7 +1147,7 @@ function deaddove_content_warning_ajax_handler() {
             $tag_names = [];
             $tag_descriptions = [];
             foreach ($tag_ids as $tag_id) {
-                $tag = get_term(intval($tag_id), 'post_tag');
+                $tag = get_term(intval($tag_id), 'content_warning');
                 if ($tag && !is_wp_error($tag)) {
                     $tag_names[] = $tag->name;  
                     $tag_descriptions[] = $tag->description;  
