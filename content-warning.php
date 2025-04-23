@@ -865,11 +865,11 @@ function deaddove_display_settings_form() {
 
         <label><strong>Select tags for which a content warning should be shown:</strong></label>
         <div style="margin-top: 10px;">
-            <?php foreach ($all_tags as $tag) : ?>
+            <?php foreach ($all_terms as $term) : ?>
                 <label style="display: block; margin-bottom: 5px;">
-                    <input type="checkbox" name="deaddove_user_tags[]" value="<?php echo esc_attr($tag->slug); ?>"
-                        <?php echo in_array($tag->slug, $user_tags) ? 'checked' : ''; ?>>
-                    <?php echo esc_html($tag->name); ?>
+                    <input type="checkbox" name="deaddove_user_tags[]" value="<?php echo esc_attr($term->slug); ?>"
+                        <?php echo in_array($term->slug, $user_warning_terms) ? 'checked' : ''; ?>>
+                    <?php echo esc_html($term->name); ?>
                 </label>
             <?php endforeach; ?>
         </div>
