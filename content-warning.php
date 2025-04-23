@@ -819,17 +819,26 @@ add_action('bp_setup_nav', 'deaddove_add_buddyboss_profile_tab');
 
 function deaddove_add_buddyboss_profile_tab() {
     global $bp;
-    // Debug ke liye
+    
+    // Add to Account menu
+    bp_core_new_nav_item([
+        'name' => __('Content Warnings', 'textdomain'),
+        'slug' => 'content-warnings',
+        'position' => 60,
+        'show_for_displayed_user' => true,
+        'screen_function' => 'deaddove_buddyboss_settings_page',
+        'default_subnav_slug' => 'content-warning-settings'
+    ]);
+
+    // Add settings sub-item
     bp_core_new_subnav_item([
         'name' => __('Content Warning Settings', 'textdomain'),
         'slug' => 'content-warning-settings',
-        'position' => 50,
+        'parent_slug' => 'content-warnings',
+        'parent_url' => bp_displayed_user_domain() . 'content-warnings/',
+        'position' => 10,
         'screen_function' => 'deaddove_buddyboss_settings_page',
-        'default_subnav_slug' => 'content-warning-settings',
-        'parent_url' => bp_loggedin_user_domain() . 'settings/',
-        'parent_slug' => 'settings',
-        'parent'=>'Account',
-        'user_has_access' => bp_is_my_profile(),   
+        'user_has_access' => bp_is_my_profile()
     ]);
 }
 
