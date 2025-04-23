@@ -846,11 +846,13 @@ function deaddove_display_settings_form() {
     }
 
     $user_id = get_current_user_id();
-    $admin_tags = get_option('deaddove_warning_terms', []);
-    $user_tags = get_user_meta($user_id, 'deaddove_user_warning_terms', true);
-
-    $user_tags = $user_tags !== '' ? $user_tags : $admin_tags;  
-    $all_tags = get_terms([
+    $admin_warning_terms = get_option('deaddove_warning_terms', []);
+    $user_warning_terms = get_user_meta($user_id, 'deaddove_user_warning_terms', true);
+    
+    // Ensure we have an array, using admin settings as default if user has no settings
+    $user_warning_terms = (!empty($user_warning_terms) && is_array($user_warning_terms)) ? $user_warning_terms : $admin_warning_terms;
+    
+    $all_terms = get_terms([
         'taxonomy' => 'content_warning',
         'hide_empty' => false,
     ]);
@@ -918,12 +920,18 @@ function deaddove_save_user_settings() {
         wp_send_json_error(['message' => 'Security check failed.']);
     }
 
-    // Save selected tags or delete if empty
-    if (isset($_POST['deaddove_user_tags'])) {
-        $selected_tags = array_map('sanitize_text_field', wp_unslash($_POST['deaddove_user_tags']));
-        update_user_meta($user_id, 'deaddove_user_warning_terms', $selected_tags);
+    // Get existing user settings or admin defaults
+    $admin_warning_terms = get_option('deaddove_warning_terms', []);
+    $current_settings = get_user_meta($user_id, 'deaddove_user_warning_terms', true);
+    $current_settings = (!empty($current_settings) && is_array($current_settings)) ? $current_settings : $admin_warning_terms;
+
+    // Process the new settings
+    if (isset($_POST['deaddove_user_tags']) && is_array($_POST['deaddove_user_tags'])) {
+        $selected_terms = array_map('sanitize_text_field', wp_unslash($_POST['deaddove_user_tags']));
+        update_user_meta($user_id, 'deaddove_user_warning_terms', $selected_terms);
     } else {
-        delete_user_meta($user_id, 'deaddove_user_warning_terms');
+        // If no tags are selected, store an empty array rather than deleting the meta
+        update_user_meta($user_id, 'deaddove_user_warning_terms', []);
     }
 
     wp_send_json_success(['message' => 'Settings saved successfully!']);
