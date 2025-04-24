@@ -815,33 +815,21 @@ add_action('wp', function() {
 });
 
 // Hook into BuddyBoss navigation
-add_action('bp_setup_nav', 'deaddove_add_buddyboss_profile_tab');
-
 function deaddove_add_buddyboss_profile_tab() {
     global $bp;
-    
-    // Add to Account menu
-    bp_core_new_nav_item([
-        'name' => __('Content Warnings', 'textdomain'),
-        'slug' => 'content-warnings',
-        'position' => 60,
-        'show_for_displayed_user' => true,
-        'screen_function' => 'deaddove_buddyboss_settings_page',
-        'default_subnav_slug' => 'content-warning-settings',
-        'icon' => 'dashicons-warning'
-    ]);
 
-    // Add settings sub-item
-    bp_core_new_subnav_item([
+    // Add to Settings menu
+    bp_core_new_subnav_item(array(
         'name' => __('Content Warning Settings', 'textdomain'),
         'slug' => 'content-warning-settings',
-        'parent_slug' => 'content-warnings',
-        'parent_url' => bp_displayed_user_domain() . 'content-warnings/',
-        'position' => 10,
+        'parent_url' => trailingslashit(bp_displayed_user_domain() . bp_get_settings_slug()),
+        'parent_slug' => bp_get_settings_slug(),
+        'position' => 30,
         'screen_function' => 'deaddove_buddyboss_settings_page',
-        'user_has_access' => bp_is_my_profile()
-    ]);
+        'user_has_access' => bp_core_can_edit_settings()
+    ));
 }
+add_action('bp_setup_nav', 'deaddove_add_buddyboss_profile_tab');
 
 function deaddove_buddyboss_settings_page() {
     add_action('bp_template_content', 'deaddove_display_settings_form');
