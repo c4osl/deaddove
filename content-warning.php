@@ -1103,14 +1103,14 @@ add_action('bp_activity_post_form_options', 'bboss_add_custom_field_to_activity_
 
 
 function bboss_save_custom_activity_field($content, $user_id, $activity_id) {
-    if (!isset($_POST['content_warning']) || empty($_POST['content_warning'])) {
+    if (!isset($_POST['content_warning_tags']) || empty($_POST['content_warning_tags'])) {
         return;
     }
     // Sanitize and convert array to comma-separated string
-    $selected_tags = array_map('intval', $_POST['content_warning']);
-    $tags_string = implode(',', $selected_tags); // Convert to string "3,4,5"
+    $selected_tags = array_map('intval', $_POST['content_warning_tags']);
+    $tags_string = implode(',', $selected_tags);
 
-    bp_activity_update_meta($activity_id, 'content_warning', $tags_string);
+    bp_activity_update_meta($activity_id, 'content_warning_tag', $tags_string);
 }
 add_action('bp_activity_posted_update', 'bboss_save_custom_activity_field', 10, 3);
 
