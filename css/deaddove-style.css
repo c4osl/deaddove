@@ -59,6 +59,33 @@
     -ms-user-select: none; 
 }
 
+/* Content Warning Toggle */
+.content-warning-header {
+    background: #f1f1f1;
+    padding: 10px;
+    cursor: pointer;
+    border: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.content-warning-container {
+    border: 1px solid #ddd;
+    border-top: none;
+    padding: 8px;
+    max-height: 200px;
+    overflow: auto;
+}
+
+.toggle-icon {
+    transition: transform 0.3s;
+}
+
+.toggle-icon.active {
+    transform: rotate(180deg);
+}
+
 /* 
 //////////////////////////
 DEAD-DOVE SETTING FORM
