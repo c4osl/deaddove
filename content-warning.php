@@ -1070,13 +1070,6 @@ add_action('wp_enqueue_scripts', 'deaddove_enqueue_scripts');
 Adding content warning field in time line
 */
 function bboss_add_custom_field_to_activity_form() {
-    $user_id = get_current_user_id();
-
-    $admin_warning_terms = get_option('content_warning', []);
-    $userTerms = get_user_meta($user_id, 'deaddove_user_warning_terms', true) ?: $admin_warning_terms; 
-    if (!is_array($userTerms)) {
-        $userTerms = [];
-    }
     $terms = get_terms([
         'taxonomy' => 'content_warning',
         'hide_empty' => false,
@@ -1085,16 +1078,12 @@ function bboss_add_custom_field_to_activity_form() {
     <div class="custom-activity-field" style="margin-top: 10px;">
         <label for="content_warning_tag">Content Warnings:</label>
         <div style="border: 1px solid #ddd; padding: 8px; height:200px; overflow:auto;">
-            <?php foreach ($terms as $term) : 
-                if (in_array($term->slug, $userTerms)) : 
-            ?>
+            <?php foreach ($terms as $term) : ?>
                 <label style="display: block; margin-bottom: 5px;">
                     <input type="checkbox" name="content_warning_tags[]" value="<?php echo esc_attr($term->term_id); ?>">
                     <?php echo esc_html($term->name); ?>
                 </label>
-            <?php 
-                endif; 
-            endforeach; ?>
+            <?php endforeach; ?>
         </div>
     </div>
     <?php
