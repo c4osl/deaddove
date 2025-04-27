@@ -814,22 +814,23 @@ add_action('wp', function() {
     }
 });
 
-// Hook into BuddyBoss navigation
-function deaddove_add_buddyboss_profile_tab() {
-    if (!function_exists('bp_core_new_nav_item')) {
+// Hook into BuddyBoss settings navigation
+function deaddove_add_buddyboss_settings_tab() {
+    if (!function_exists('bp_core_new_subnav_item')) {
         return;
     }
 
-    bp_core_new_nav_item(array(
-        'name' => '<span class="bb-icon-l bb-icon-exclamation"></span>' . __('Content Warning Settings', 'textdomain'),
-        'slug' => 'content-warning-settings',
-        'position' => 60,
-        'show_for_displayed_user' => true,
+    bp_core_new_subnav_item(array(
+        'name'            => __('Content Warning Settings', 'textdomain'),
+        'slug'            => 'content-warning-settings',
+        'parent_url'      => trailingslashit(bp_loggedin_user_domain() . bp_get_settings_slug()),
+        'parent_slug'     => bp_get_settings_slug(),
         'screen_function' => 'deaddove_buddyboss_settings_page',
-        'default_subnav_slug' => 'general'
+        'position'        => 30,
+        'user_has_access' => bp_core_can_edit_settings()
     ));
 }
-add_action('bp_setup_nav', 'deaddove_add_buddyboss_profile_tab', 100);
+add_action('bp_setup_nav', 'deaddove_add_buddyboss_settings_tab', 100);
 
 function deaddove_buddyboss_settings_page() {
     add_action('bp_template_content', 'deaddove_display_settings_form');
