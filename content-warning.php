@@ -226,7 +226,7 @@ add_shortcode('content_warning', 'deaddove_content_warning_shortcode');
 function deaddove_settings_page() {
     add_options_page(
         'Dead Dove Settings', 
-        'Content Warning', 
+        '<img src="' . plugin_dir_url(__FILE__) . 'generated-icon.png" style="width: 20px; vertical-align: middle; margin-right: 5px;">Content Warning', 
         'manage_options', 
         'content-warning-settings', 
         'deaddove_settings_page_html'
