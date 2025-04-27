@@ -1076,21 +1076,8 @@ function bboss_add_custom_field_to_activity_form() {
     ]);
     ?>
     <div class="custom-activity-field" style="margin-top: 10px;">
-        <div class="content-warning-header" style="cursor: pointer;">
-            <label for="content_warning_tag">Content Warnings</label>
-            <span class="toggle-icon">▼</span>
-        </div>
-        <div class="content-warning-container" style="display: none;">
-            <script>
-            jQuery(document).ready(function($) {
-                $('.content-warning-header').on('click', function() {
-                    $(this).find('.toggle-icon').text(
-                        $(this).next('.content-warning-container').is(':visible') ? '▼' : '▲'
-                    );
-                    $(this).next('.content-warning-container').slideToggle();
-                });
-            });
-            </script>
+        <label for="content_warning_tag">Content Warnings:</label>
+        <div style="border: 1px solid #ddd; padding: 8px; height:200px; overflow:auto;">
             <?php foreach ($terms as $term) : ?>
                 <label style="display: block; margin-bottom: 5px;">
                     <input type="checkbox" name="content_warning_tags[]" value="<?php echo esc_attr($term->term_id); ?>">

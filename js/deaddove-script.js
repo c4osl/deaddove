@@ -42,7 +42,51 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     }
   });
+  // jQuery(document).ready(function ($) {
+  //   console.log("hello demo");
+  //   var hasModified = false;
+  //   if ($(".deaddove-block-description").length > 0) {
+  //     hasModified = true;
+  //   }
+  //   console.log(hasModified);
+  //   $(document).on(
+  //     "click",
+  //     ".sap-action-button, .sap-story-publish-btn, .sap-story-draft-btn, .sap-story-update-btn, .sap-story-draft-btn, .sap-story-preview-btn",
+  //     function (event) {
+  //       event.preventDefault();
+  //       if ($(".deaddove-block-description").length > 0) {
+  //         console.log("Element found!");
+  //         hasModified = true;
+  //       }
 
+  //       $(".deaddove-block-description").each(function () {
+  //         var tagsValue = $(this).attr("tags");
+  //         var content = $(this).html();
+  //         if (tagsValue) {
+  //           var replacement = `[content_warning tags="${tagsValue}"]${content}[/content_warning]`;
+  //           $(this).replaceWith(replacement);
+  //         }
+  //       });
+
+  //       console.log("P tag replaced with content_warning shortcode.");
+
+  //       var button = this;
+  //       if (hasModified) {
+  //         console.log("yess inside thie method");
+  //         setTimeout(function () {
+  //           var href = $(button).attr("href");
+  //           if (href && href !== "#") {
+  //             window.location.href = href;
+  //           } else {
+  //             console.log("hello demo;::::::::::::  ");
+  //             $(button).trigger("click");
+  //           }
+  //         }, 500);
+  //       }
+  //     }
+  //   );
+  // });
+  
   jQuery(document).ready(function ($) {
     console.log("hello demo");
 
@@ -52,22 +96,61 @@ document.addEventListener("DOMContentLoaded", function () {
     if ($(".deaddove-block-description").length > 0) {
         hasModified = true;
     }
-
+    
     console.log(hasModified);
 
+    // $(document).on("click", ".sap-action-button, .sap-story-publish-btn, .sap-story-draft-btn, .sap-story-update-btn, .sap-story-preview-btn", function (event) {
+    //     if (isProcessing) return false; // Stop multiple clicks
+    //     isProcessing = true;
+
+    //     event.preventDefault();
+
+    //     if ($(".deaddove-block-description").length > 0) {
+    //         console.log("Element found!");
+    //         hasModified = true;
+    //     }
+
+    //     $(".deaddove-block-description").each(function () {
+    //         var tagsValue = $(this).attr("tags");
+    //         var content = $(this).html();
+    //         if (tagsValue) {
+    //             var replacement = `[content_warning tags="${tagsValue}"]${content}[/content_warning]`;
+    //             $(this).replaceWith(replacement);
+    //         }
+    //     });
+
+    //     console.log("P tag replaced with content_warning shortcode.");
+
+    //     var button = this;
+    //     if (hasModified) {
+    //         console.log("Processing redirection...");
+    //         setTimeout(function () {
+    //             var href = $(button).attr("href");
+    //             if (href && href !== "#") {
+    //                 window.location.href = href;
+    //             } else {
+    //                 console.log("hello demo;::::::::::::  ");
+    //                 $(button).trigger("click");
+    //             }
+    //             isProcessing = false; // Allow clicks again after processing
+    //         }, 1000);
+    //     } else {
+    //         isProcessing = false; // Reset flag if no modification happened
+    //     }
+    // });
      /* 
     manage from frontend wdiget 
     */
     $(".deaddove-blog-warning").on("click", function (event) {
       event.preventDefault(); // Default behavior roko
-
+      
       const blurContent = $(this);
       const blurContentId = blurContent.attr("id");
       const postId = blurContentId.match(/\d+/);  
 
       if (postId) {
           const postIdNumber = parseInt(postId[0], 10);
-
+          
           ajaxCallingMethod({postIdNumber, blurContent, postType:'post'});
       }
   });
@@ -89,7 +172,7 @@ document.addEventListener("DOMContentLoaded", function () {
   */
   function ajaxCallingMethod({postIdNumber, blurContent, tags='', postType = 'post'}){
     console.log("checking tags:",tags);
-
+    
     $.ajax({
       url: deaddove_ajax.ajaxurl,  
       type: "POST",
@@ -112,12 +195,12 @@ document.addEventListener("DOMContentLoaded", function () {
               modal.show();
               showContentButton.on("click", function () {
                 modal.hide();
-                if(postType ==='post'){
-                  blurContent.removeClass("deaddove-blog-warning");
-                }else{
-                  console.log(blurContent,"hellokdsflj");
-                  blurContent.removeClass("deaddove-block-description");
-                }
+               if(postType ==='post'){
+                 blurContent.removeClass("deaddove-blog-warning");
+               }else{
+                console.log(blurContent,"hellokdsflj");
+                blurContent.removeClass("deaddove-block-description");
+               }
               blurContent.off("click");
               });
               hideContentButton.on("click", function () {
@@ -133,23 +216,7 @@ document.addEventListener("DOMContentLoaded", function () {
       },
   });
   }
-  // Add event handler for form submission (if needed)
-    $('#description-form').on('submit', function(e) {
-        e.preventDefault();
-        // Your form submission logic here
-    });
-
-    // Content warning toggle functionality
-    $('.content-warning-header').on('click', function() {
-        var container = $(this).next('.content-warning-container');
-        var icon = $(this).find('.toggle-icon');
-
-        container.slideToggle(300, function() {
-            // Update icon based on container visibility
-            icon.text(container.is(':visible') ? '▲' : '▼');
-        });
-    });
 });
 
+});
 console.log("checking file file running or not ");
-});
