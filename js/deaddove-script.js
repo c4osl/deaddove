@@ -112,12 +112,12 @@ document.addEventListener("DOMContentLoaded", function () {
               modal.show();
               showContentButton.on("click", function () {
                 modal.hide();
-               if(postType ==='post'){
-                 blurContent.removeClass("deaddove-blog-warning");
-               }else{
-                console.log(blurContent,"hellokdsflj");
-                blurContent.removeClass("deaddove-block-description");
-               }
+                if(postType ==='post'){
+                  blurContent.removeClass("deaddove-blog-warning");
+                }else{
+                  console.log(blurContent,"hellokdsflj");
+                  blurContent.removeClass("deaddove-block-description");
+                }
               blurContent.off("click");
               });
               hideContentButton.on("click", function () {
@@ -133,12 +133,23 @@ document.addEventListener("DOMContentLoaded", function () {
       },
   });
   }
-  // Add JavaScript for content warning toggle
+  // Add event handler for form submission (if needed)
+    $('#description-form').on('submit', function(e) {
+        e.preventDefault();
+        // Your form submission logic here
+    });
+
+    // Content warning toggle functionality
     $('.content-warning-header').on('click', function() {
-        $(this).find('.toggle-icon').toggleClass('active');
-        $(this).siblings('.content-warning-container').slideToggle(300);
+        var container = $(this).next('.content-warning-container');
+        var icon = $(this).find('.toggle-icon');
+
+        container.slideToggle(300, function() {
+            // Update icon based on container visibility
+            icon.text(container.is(':visible') ? '▲' : '▼');
+        });
     });
 });
 
-});
 console.log("checking file file running or not ");
+});
