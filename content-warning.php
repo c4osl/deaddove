@@ -820,7 +820,7 @@ function deaddove_add_buddyboss_profile_tab() {
 
     // Add to Settings menu
     bp_core_new_subnav_item(array(
-        'name' => __('Content Warning Settings', 'textdomain'),
+        'name' => '<span class="bb-icon-f bb-icon-exclamation-triangle"></span>' . __('Content Warning Settings', 'textdomain'),
         'slug' => 'content-warning-settings',
         'parent_url' => trailingslashit(bp_displayed_user_domain() . bp_get_settings_slug()),
         'parent_slug' => bp_get_settings_slug(),
