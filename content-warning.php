@@ -821,7 +821,7 @@ function deaddove_add_buddyboss_profile_tab() {
     }
 
     bp_core_new_nav_item(array(
-        'name' => __('Content Warning Settings', 'textdomain'),
+        'name' => '<span class="bb-icon-l bb-icon-exclamation"></span>' . __('Content Warning Settings', 'textdomain'),
         'slug' => 'content-warning-settings',
         'position' => 60,
         'show_for_displayed_user' => true,
