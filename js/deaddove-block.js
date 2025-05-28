@@ -63,41 +63,56 @@ registerBlockType('cw/content-warning', {
     
 });
 
-// Initialize listeners on DOMContentLoaded
-document.addEventListener('DOMContentLoaded', () => {
-    console.log("Initializing modal listeners...");
-    console.log("hello file");
-    initializeModalListeners();
-});
+// Initialize listeners when DOM is ready and watch for new content
+document.addEventListener('DOMContentLoaded', initializeModalListeners);
+
+// Also initialize when new content is loaded (for dynamic content)
+if (typeof wp !== 'undefined' && wp.domReady) {
+    wp.domReady(initializeModalListeners);
+}
 
 function initializeModalListeners() {
-    const modalWrappers = document.querySelectorAll('.deaddove-modal-wrapper');
-
-    modalWrappers.forEach((modalWrapper) => {
-        const showContentBtn = modalWrapper.querySelector('.deaddove-show-content-btn');
-        const hideContentBtn = modalWrapper.querySelector('.deaddove-hide-content-btn');
-        const modal = modalWrapper.querySelector('.deaddove-modal');
-        const blurredContent = modalWrapper.querySelector('.deaddove-blurred-content');
-
-        if (!showContentBtn || !hideContentBtn || !modal || !blurredContent) {
-            console.error("Missing elements in modal wrapper:", { 
-                showContentBtn, hideContentBtn, modal, blurredContent 
-            });
-            return; // Stop execution for this modalWrapper if elements are missing
-        }
-
-        console.log("Attaching event listeners...");
-
-        showContentBtn.addEventListener('click', () => {
-            console.log("Show content button clicked");
-            modal.style.display = 'none'; // Hide modal
-            blurredContent.style.display = 'block'; // Show blurred content
+    console.log("Initializing modal listeners...");
+    
+    // Use jQuery if available, otherwise use vanilla JS
+    const $ = window.jQuery;
+    
+    if ($) {
+        // jQuery approach for better compatibility with WordPress
+        $(document).off('click.deaddove').on('click.deaddove', '.deaddove-show-content-btn', function(e) {
+            e.preventDefault();
+            const $wrapper = $(this).closest('.deaddove-modal-wrapper');
+            $wrapper.find('.deaddove-modal').hide();
+            $wrapper.find('.deaddove-blurred-content').removeClass('deaddove-blur');
         });
-
-        hideContentBtn.addEventListener('click', () => {
-            console.log("Hide content button clicked");
-            modal.style.display = 'block'; // Show modal
-            blurredContent.style.display = 'none'; // Hide blurred content
+        
+        $(document).on('click.deaddove', '.deaddove-hide-content-btn', function(e) {
+            e.preventDefault();
+            const $wrapper = $(this).closest('.deaddove-modal-wrapper');
+            $wrapper.find('.deaddove-modal').hide();
         });
-    });
+    } else {
+        // Vanilla JS fallback
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('deaddove-show-content-btn')) {
+                e.preventDefault();
+                const wrapper = e.target.closest('.deaddove-modal-wrapper');
+                if (wrapper) {
+                    const modal = wrapper.querySelector('.deaddove-modal');
+                    const blurredContent = wrapper.querySelector('.deaddove-blurred-content');
+                    if (modal) modal.style.display = 'none';
+                    if (blurredContent) blurredContent.classList.remove('deaddove-blur');
+                }
+            }
+            
+            if (e.target.classList.contains('deaddove-hide-content-btn')) {
+                e.preventDefault();
+                const wrapper = e.target.closest('.deaddove-modal-wrapper');
+                if (wrapper) {
+                    const modal = wrapper.querySelector('.deaddove-modal');
+                    if (modal) modal.style.display = 'none';
+                }
+            }
+        });
+    }
 }

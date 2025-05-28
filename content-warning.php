@@ -104,8 +104,8 @@ function deaddove_enqueue_block_editor_assets() {
     wp_enqueue_script(
         'deaddove-block-script',
         plugin_dir_url(__FILE__) . 'js/deaddove-block.js',
-        ['wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components'],  // Ensure dependencies are correct
-        null,
+        ['wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-api-fetch'],
+        filemtime(plugin_dir_path(__FILE__) . 'js/deaddove-block.js'),
         true
     );
 }
@@ -114,11 +114,10 @@ add_action('enqueue_block_editor_assets', 'deaddove_enqueue_block_editor_assets'
 // Register the block
 function deaddove_register_content_warning_block() {
     register_block_type('cw/content-warning', [
-        'editor_script' => 'deaddove-block-script',
         'render_callback' => 'deaddove_render_content_warning_block',
         'attributes' => [
             'terms' => [
-                'type' => 'array', // Changed to 'array' to allow multiple tags
+                'type' => 'array',
                 'default' => [],
             ],
         ],
@@ -132,7 +131,10 @@ function deaddove_render_content_warning_block($attributes, $content) {
     $term_ids = $attributes['terms'] ?? [];
     // Retrieve user term preferences or default ones.
     $admin_warning_terms = get_option('deaddove_warning_terms', []);
-    $user_terms = get_user_meta(get_current_user_id(), 'deaddove_user_warning_terms', true) ?: $admin_warning_terms;
+    $user_terms = get_user_meta(get_current_user_id(), 'deaddove_user_warning_terms', true);
+    if (empty($user_terms)) {
+        $user_terms = $admin_warning_terms;
+    }
 
     $warning_texts = [];
     foreach ($term_ids as $term_id) {
@@ -153,7 +155,7 @@ function deaddove_render_content_warning_block($attributes, $content) {
 
     return '
         <div class="deaddove-modal-wrapper">
-            <div class="deaddove-modal" style="display: none;">
+            <div class="deaddove-modal" style="display: block;">
                 <div class="deaddove-modal-content">
                     <p>' . $all_warnings . '</p>
                     <div class="modal-buttons">
@@ -163,8 +165,8 @@ function deaddove_render_content_warning_block($attributes, $content) {
                     <small><a href="#deaddove-warning-settings" class="deaddove-settings-link">Modify your content warning settings</a></small>
                 </div>
             </div>
-            <div class="deaddove-blurred-content deaddove-blur">
-                ' . $content . ' <!-- Render nested blocks here -->
+            <div class="deaddove-blurred-content deaddove-blur" style="filter: blur(10px);">
+                ' . $content . '
             </div>
         </div>';
 }
