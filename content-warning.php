@@ -169,13 +169,6 @@ function deaddove_render_content_warning_block($attributes, $content) {
         </div>';
 }
 
-// Register the block with a render callback.
-add_action('init', function () {
-    register_block_type('cw/content-warning', [
-        'render_callback' => 'deaddove_render_content_warning_block',
-    ]);
-});
-
 // Shortcode for custom content warnings
 function deaddove_content_warning_shortcode($atts, $content = null) {
 
