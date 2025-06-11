@@ -42,104 +42,22 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     }
   });
-  // jQuery(document).ready(function ($) {
-  //   console.log("hello demo");
-  //   var hasModified = false;
-  //   if ($(".deaddove-block-description").length > 0) {
-  //     hasModified = true;
-  //   }
-  //   console.log(hasModified);
-  //   $(document).on(
-  //     "click",
-  //     ".sap-action-button, .sap-story-publish-btn, .sap-story-draft-btn, .sap-story-update-btn, .sap-story-draft-btn, .sap-story-preview-btn",
-  //     function (event) {
-  //       event.preventDefault();
-  //       if ($(".deaddove-block-description").length > 0) {
-  //         console.log("Element found!");
-  //         hasModified = true;
-  //       }
-
-  //       $(".deaddove-block-description").each(function () {
-  //         var tagsValue = $(this).attr("tags");
-  //         var content = $(this).html();
-  //         if (tagsValue) {
-  //           var replacement = `[content_warning tags="${tagsValue}"]${content}[/content_warning]`;
-  //           $(this).replaceWith(replacement);
-  //         }
-  //       });
-
-  //       console.log("P tag replaced with content_warning shortcode.");
-
-  //       var button = this;
-  //       if (hasModified) {
-  //         console.log("yess inside thie method");
-  //         setTimeout(function () {
-  //           var href = $(button).attr("href");
-  //           if (href && href !== "#") {
-  //             window.location.href = href;
-  //           } else {
-  //             console.log("hello demo;::::::::::::  ");
-  //             $(button).trigger("click");
-  //           }
-  //         }, 500);
-  //       }
-  //     }
-  //   );
-  // });
   
+
   jQuery(document).ready(function ($) {
-    console.log("hello demo");
+    console.log("Dead Dove script loaded");
 
     var hasModified = false;
-    var isProcessing = false; // Flag to prevent multiple clicks
+    var isProcessing = false;
 
     if ($(".deaddove-block-description").length > 0) {
         hasModified = true;
     }
     
-    console.log(hasModified);
+    console.log("Has modified:", hasModified);
 
-    // $(document).on("click", ".sap-action-button, .sap-story-publish-btn, .sap-story-draft-btn, .sap-story-update-btn, .sap-story-preview-btn", function (event) {
-    //     if (isProcessing) return false; // Stop multiple clicks
-    //     isProcessing = true;
-
-    //     event.preventDefault();
-
-    //     if ($(".deaddove-block-description").length > 0) {
-    //         console.log("Element found!");
-    //         hasModified = true;
-    //     }
-
-    //     $(".deaddove-block-description").each(function () {
-    //         var tagsValue = $(this).attr("tags");
-    //         var content = $(this).html();
-    //         if (tagsValue) {
-    //             var replacement = `[content_warning tags="${tagsValue}"]${content}[/content_warning]`;
-    //             $(this).replaceWith(replacement);
-    //         }
-    //     });
-
-    //     console.log("P tag replaced with content_warning shortcode.");
-
-    //     var button = this;
-    //     if (hasModified) {
-    //         console.log("Processing redirection...");
-    //         setTimeout(function () {
-    //             var href = $(button).attr("href");
-    //             if (href && href !== "#") {
-    //                 window.location.href = href;
-    //             } else {
-    //                 console.log("hello demo;::::::::::::  ");
-    //                 $(button).trigger("click");
-    //             }
-    //             isProcessing = false; // Allow clicks again after processing
-    //         }, 1000);
-    //     } else {
-    //         isProcessing = false; // Reset flag if no modification happened
-    //     }
-    // });
-     /* 
-    manage from frontend wdiget 
+    /* 
+    Manage frontend widget 
     */
     $(".deaddove-blog-warning").on("click", function (event) {
       event.preventDefault(); // Default behavior roko
