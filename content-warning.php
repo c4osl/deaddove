@@ -653,7 +653,7 @@ function deaddove_get_post_description() {
             }else{
             $post = get_post($post_id); 
             $post_author_id = get_post_field('post_author', $post_id); 
-            $admin_warning_terms = get_option('content_warning', []);
+            $admin_warning_terms = get_option('deaddove_warning_terms', []);
             $user_tags = get_user_meta($post_author_id, 'deaddove_user_warning_terms', true) ?: $admin_warning_terms;
             $post_terms = wp_get_object_terms($post_id, 'content_warning', ['fields' => 'slugs']);  
             $matching_tags = array_intersect($post_terms, $user_tags);
@@ -799,7 +799,7 @@ function get_custom_widget_callback() {
         wp_die('Permission Denied');
     }
     $user_id = get_current_user_id();
-    $admin_warning_terms = get_option('content_warning', []);
+    $admin_warning_terms = get_option('deaddove_warning_terms', []);
     $user_tags = get_user_meta($user_id, 'deaddove_user_warning_terms', true) ?: $admin_warning_terms;  
     if (empty($user_tags)) {
         wp_send_json_error(array(
