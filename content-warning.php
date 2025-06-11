@@ -335,7 +335,7 @@ add_action('personal_options_update', 'deaddove_save_user_profile_settings');
 add_action('edit_user_profile_update', 'deaddove_save_user_profile_settings');
 
 function register_custom_user_widget() {
-    register_widget('Custom_User_Widget');
+    register_widget('DeadDove_Widget');
 }
 add_action('widgets_init', 'register_custom_user_widget');  
 
@@ -619,10 +619,7 @@ class DeadDove_Widget extends WP_Widget {
 }
 
 
-function deaddove_register_widget() {
-    register_widget('DeadDove_Widget');
-}
-add_action('widgets_init', 'deaddove_register_widget');
+
 
 /* 
 Get Description for modal 
