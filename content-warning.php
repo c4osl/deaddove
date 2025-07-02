@@ -66,7 +66,7 @@ add_action('wp_enqueue_scripts', 'deaddove_enqueue_modal_script');
 function deaddove_filter_content($content) {
     if (!is_single()) return $content;
 
-    $post_terms = wp_get_object_terms(get_the_ID(), 'content_warning', ['fields' => 'slugs']);
+    $post_terms = wp_get_post_terms(get_the_ID(), 'content_warning', ['fields' => 'slugs']);
     $admin_terms = get_option('deaddove_warning_terms', []);
     $user_terms = get_user_meta(get_current_user_id(), 'deaddove_warning_terms', true) ?: $admin_terms;
     $warning_terms = array_intersect($admin_terms, $user_terms, $post_terms);
@@ -91,7 +91,7 @@ function deaddove_filter_content($content) {
                             <button class="deaddove-show-content-btn">Show this content</button>
                             <button class="deaddove-hide-content-btn">Keep it hidden</button>
                         </div>
-                        <small><a href="#deaddove-warning-settings">Modify your content warning settings</a></small>
+                        <small><a href="#deaddove-warning-settings1">Modify your content warning settings</a></small>
                     </div>
                 </div>
                 <div class="deaddove-blurred-content deaddove-blur">' . $content . '</div>
@@ -104,8 +104,8 @@ function deaddove_enqueue_block_editor_assets() {
     wp_enqueue_script(
         'deaddove-block-script',
         plugin_dir_url(__FILE__) . 'js/deaddove-block.js',
-        ['wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-api-fetch'],
-        filemtime(plugin_dir_path(__FILE__) . 'js/deaddove-block.js'),
+        ['wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components'],  // Ensure dependencies are correct
+        null,
         true
     );
 }
@@ -114,10 +114,11 @@ add_action('enqueue_block_editor_assets', 'deaddove_enqueue_block_editor_assets'
 // Register the block
 function deaddove_register_content_warning_block() {
     register_block_type('cw/content-warning', [
+        'editor_script' => 'deaddove-block-script',
         'render_callback' => 'deaddove_render_content_warning_block',
         'attributes' => [
             'terms' => [
-                'type' => 'array',
+                'type' => 'array', // Changed to 'array' to allow multiple tags
                 'default' => [],
             ],
         ],
@@ -127,14 +128,11 @@ add_action('init', 'deaddove_register_content_warning_block');
 
 // Render callback for the block
 function deaddove_render_content_warning_block($attributes, $content) {
-
+    
     $term_ids = $attributes['terms'] ?? [];
     // Retrieve user term preferences or default ones.
     $admin_warning_terms = get_option('deaddove_warning_terms', []);
-    $user_terms = get_user_meta(get_current_user_id(), 'deaddove_user_warning_terms', true);
-    if (empty($user_terms)) {
-        $user_terms = $admin_warning_terms;
-    }
+    $user_terms = get_user_meta(get_current_user_id(), 'deaddove_user_warning_terms', true) ?: $admin_warning_terms;
 
     $warning_texts = [];
     foreach ($term_ids as $term_id) {
@@ -155,46 +153,53 @@ function deaddove_render_content_warning_block($attributes, $content) {
 
     return '
         <div class="deaddove-modal-wrapper">
-            <div class="deaddove-modal" style="display: block;">
+            <div class="deaddove-modal" style="display: none;">
                 <div class="deaddove-modal-content">
                     <p>' . $all_warnings . '</p>
                     <div class="modal-buttons">
                         <button class="deaddove-show-content-btn">Show this content</button>
                         <button class="deaddove-hide-content-btn">Keep it hidden</button>
                     </div>
-                    <small><a href="#deaddove-warning-settings" class="deaddove-settings-link">Modify your content warning settings</a></small>
+                    <small><a href="#deaddove-warning-settings2" class="deaddove-settings-link">Modify your content warning settings</a></small>
                 </div>
             </div>
-            <div class="deaddove-blurred-content deaddove-blur" style="filter: blur(10px);">
-                ' . $content . '
+            <div class="deaddove-blurred-content deaddove-blur">
+                ' . $content . ' <!-- Render nested blocks here -->
             </div>
         </div>';
 }
+
+// Register the block with a render callback.
+add_action('init', function () {
+    register_block_type('cw/content-warning', [
+        'render_callback' => 'deaddove_render_content_warning_block',
+    ]);
+});
 
 // Shortcode for custom content warnings
 function deaddove_content_warning_shortcode($atts, $content = null) {
 
     $atts = shortcode_atts(['tags' => ''], $atts);
     $tags = array_map('trim', explode(',', $atts['tags']));
-    $admin_warning_tags = get_option('deaddove_warning_terms', []);
-    $user_tags = get_user_meta(get_current_user_id(), 'deaddove_user_warning_terms', true) ?: $admin_warning_tags;
+    $admin_warning_tags = get_option('deaddove_warning_tags', []);
+    $user_tags = get_user_meta(get_current_user_id(), 'deaddove_user_warning_tags', true) ?: $admin_warning_tags;
 
     $warning_texts = [];
     foreach ($tags as $tag_slug) {
-        $tag = get_term_by('slug', $tag_slug, 'content_warning');
+        $tag = get_term_by('slug', $tag_slug, 'post_tag');
         if ($tag && in_array($tag_slug, $user_tags)) {
             $warning_text = $tag->description ?: 'This content requires your agreement to view.';
             $warning_texts[] = $warning_text;
         }
     }
-
+   
     if (empty($warning_texts)) {
         return do_shortcode($content);
     }
-
+      
 
     $all_warnings = implode('<br><br>', $warning_texts);
-
+     
     if (strpos($_SERVER['REQUEST_URI'], '/add-new-post') !== false) {
         return '<p class="deaddove-block-description" tags="'.$atts['tags'].'">' . $content . '</p><br>';
     }
@@ -207,7 +212,7 @@ function deaddove_content_warning_shortcode($atts, $content = null) {
                         <button class="deaddove-show-content-btn">Show this content</button>
                         <button class="deaddove-hide-content-btn">Keep it hidden</button>
                     </div>
-                    <small><a href="#deaddove-warning-settings" class="deaddove-settings-link">Modify your content warning settings</a></small>
+                    <small><a href="#deaddove-warning-settings3" class="deaddove-settings-link">Modify your content warning settings</a></small>
                 </div>
             </div>
             <div class="deaddove-blurred-content deaddove-blur">
@@ -334,11 +339,358 @@ function deaddove_save_user_profile_settings($user_id) {
 add_action('personal_options_update', 'deaddove_save_user_profile_settings');
 add_action('edit_user_profile_update', 'deaddove_save_user_profile_settings');
 
+
+
+
+
+
+function deaddove_display_meta_box($post) {
+    // Retrieve values or set default for new posts
+    $boolean_field_1 = get_post_meta($post->ID, '_blured_featured_image', true);
+    if ($boolean_field_1 === '' && $post->post_status == 'auto-draft') $boolean_field_1 = 0;
+    ?>
+    <p>
+        <label>
+            <input type="checkbox" name="_blured_featured_image" value="1" <?php checked($boolean_field_1, 1); ?>>
+            Blured Featured Image
+        </label>
+    </p>
+  
+    <?php
+}
+ 
+ /* 
+    save to custom field image blured  
+*/
+function deaddove_save_custom_fields($post_id) {
+    $user = wp_get_current_user();
+    $allowed_roles = ['administrator', 'editor', 'author', 'vendor', 'customer', 'member', 'subscriber'];
+    $boolean_field_1 = isset($_POST['_blured_featured_image']) ? 1 : 0;
+    update_post_meta($post_id, '_blured_featured_image', $boolean_field_1);
+}
+add_action('save_post', 'deaddove_save_custom_fields');
+
+
+/* 
+
+Featured Image blured
+
+*/
+
+class Blur_Featured_Image_Widget extends WP_Widget {
+    // Corrected constructor
+    public function __construct() {
+        parent::__construct(
+            'blur_featured_image_widget', // Widget ID
+            __('Blur Featured Image', 'text_domain'), // Widget name
+            array('description' => __('Enable/Disable blur effect for the current post.', 'text_domain'))
+        );
+    }
+
+    // Display the widget form in the admin panel
+    public function form($instance) {
+        echo "<p>This widget allows users to blur the featured image for individual posts.</p>";
+    }
+
+    // Display the checkbox in the frontend
+    public function widget($args, $instance) {
+        if (is_user_logged_in()) {
+            // global $post;
+            // $post_id = isset($_GET['post']) ? intval($_GET['post']) : 0;
+            // if (!$post_id && isset($post)) {
+            //     $post_id = $post->ID;
+            // }   
+            $post_author_id = get_post_field('post_author', $post_id);
+            $current_user_id = get_current_user_id();
+            if ($current_user_id == $post_author_id) {
+                if (is_single()) {  
+                    $post_id = get_the_ID();
+                    $blur_enabled = get_post_meta($post_id, '_blured_featured_image', true);
+                    echo $args['before_widget'];
+                    ?>
+                    <form id="blur-featured-image-form">
+                        <input type="hidden" name="post_id" value="<?php echo esc_attr($post_id); ?>">
+                        
+                        <p>
+                            <input type="checkbox" id="blur_featured_image_widget" name="_blured_featured_image" value="1" 
+                                <?php checked($blur_enabled, 1); ?>>
+                            <label for="blur_featured_image_widget">Content warning on Post Featured Image</label>
+                        </p>
+                        <button type="submit">Save</button>
+                        <span id="blur-featured-image-message" style="color: green; display: none;">Saved!</span>
+                    </form>
+                    <script>
+                        jQuery(document).ready(function($) {
+                        $("#blur-featured-image-form").on("submit", function(e) {
+                            e.preventDefault();
+                            var postData = {
+                                action: "save_blur_featured_image",
+                                post_id: $("input[name='post_id']").val(),
+                                _blured_featured_image: $("#blur_featured_image_widget").is(":checked") ? 1 : 0
+                            };
+
+                        $.post("<?php echo admin_url('admin-ajax.php'); ?>", postData, function(response) {
+                            if (response.success) {
+                                $("#blur-featured-image-message").show();
+                                setTimeout(function() {
+                                    location.reload();  
+                                }, 1000);
+                            } else {
+                                alert("Error: " + response.data);
+                            }
+                        }).fail(function(xhr, status, error) {
+                            console.error("AJAX Error:", status, error);
+                            alert("Failed to save. Check the console for details.");
+                        });
+                        });
+                        });
+                    </script>
+
+                    <?php
+                    echo $args['after_widget'];
+                }
+                }
+    }
+}
+}
+
+
+function register_blur_featured_image_widget() {
+    register_widget('Blur_Featured_Image_Widget');
+}
+add_action('widgets_init', 'register_blur_featured_image_widget');
+
+
+/* 
+Apply blur effect if enabled
+
+*/
+add_filter('post_thumbnail_html', 'apply_blur_if_enabled', 10, 3);
+function apply_blur_if_enabled($attr, $attachment, $size) {
+   
+    if (is_single()) {
+        $post_id = get_the_ID();
+        $blur_enabled = get_post_meta($post_id, '_blured_featured_image', true);
+        
+        $tags = get_the_tags($post_id);
+ 
+        $warning_texts = [];
+    
+        if ($tags) {
+            foreach ($tags as $tag) {
+                if (!empty($tag->description)) {
+                     
+                    $warning_texts[] = esc_html($tag->description);
+                } else {
+              
+                    $warning_texts[] = 'This content requires your agreement to view.';
+                }
+            }
+        }else{
+            $warning_texts[] = 'This content requires your agreement to view.';
+        }
+    
+        $all_warnings = implode('<br><br>', $warning_texts);   
+        if ($blur_enabled) {
+            return '
+               <div class="deaddove-modal-wrapper">
+                <div class="deaddove-modal" style="display:none;">
+                    <div class="deaddove-modal-content">
+                        <p>'.$all_warnings.'</p>
+                        <div class="modal-buttons">
+                            <button class="deaddove-show-content-btn">Show this content</button>
+                            <button class="deaddove-hide-content-btn">Keep it hidden</button>
+                        </div>
+                        <small><a href="#deaddove-warning-settings4" class="deaddove-settings-link">Modify your content warning settings</a></small>
+                    </div>
+                </div> 
+                <div class="deaddove-blurred-content deaddove-blur">' . $attr    . '</div>
+            </div>  
+                ';
+           
+        }
+        
+    }
+    return $attr;
+}
+
+// Disable block widgets (if necessary)
+function disable_block_widgets() {
+    remove_theme_support('widgets-block-editor');
+}
+add_action('after_setup_theme', 'disable_block_widgets');
+
+
+ 
+function save_blur_featured_image() {
+    if (!isset($_POST['post_id'])) {
+        wp_send_json_error("Post ID missing");
+    }
+
+    $post_id = intval($_POST['post_id']);
+
+    if (isset($_POST['_blured_featured_image']) && $_POST['_blured_featured_image'] == "1") {
+        
+        update_post_meta($post_id, '_blured_featured_image', $_POST['_blured_featured_image']);
+    } else {
+        update_post_meta($post_id, '_blured_featured_image', 0);
+       
+    }
+
+    wp_send_json_success("Updated successfully");
+}
+
+// Register AJAX actions
+add_action('wp_ajax_save_blur_featured_image', 'save_blur_featured_image');
+add_action('wp_ajax_nopriv_save_blur_featured_image', 'save_blur_featured_image'); // For non-logged-in users
+
+
+
+ 
+
+ /* 
+ ************** Update Description Widget ******************* it should remove 
+ */
+class Custom_User_Widget extends WP_Widget {
+
+    public function __construct() {
+        parent::__construct(
+            'custom_user_widget', 
+            __('Custom User Widget', 'text_domain'), 
+            ['description' => __('Add the content warning for description', 'text_domain')]
+        );
+    }
+    public function form($instance) {
+        echo "<p>This widget allows users to blur the featured image for individual posts.</p>";
+    }
+    public function widget($args, $instance) {
+      
+        if (is_user_logged_in()) {
+            $user_id = get_current_user_id();
+          
+            if (strpos($_SERVER['REQUEST_URI'], '/add-new-post') === false) {
+                return;
+            }
+            // $admin_tags = get_option('deaddove_warning_tags', []);
+             
+            // $user_tags = get_user_meta(get_current_user_id(), 'deaddove_warning_tags', true) ?: $admin_tags;
+            $admin_warning_tags = get_option('content_warning', []);
+            $user_tags = get_user_meta($user_id, 'content_warning', true) ?: $admin_warning_tags;
+          
+            $post_author_id = get_post_field('post_author', $post_id);
+             
+            // if ($user_id == $post_author_id) {
+                $post_description = isset($post) ? esc_textarea($post->post_content) : '';
+                
+                global $post;
+                $post_description = isset($post) ? esc_textarea($post->post_content) : '';
+                echo $args['before_widget'];
+                ?>
+                <form method="POST" action="" id="description-form">
+                    <!-- <?php wp_nonce_field('update_user_tags', 'user_tags_nonce'); ?> -->
+                    <input type="hidden" name="post_id" value="<?php echo esc_attr($post_id); ?>">
+                    <input type="hidden" name="user_id" value="<?php echo esc_attr($user_id); ?>">
+                    <p><strong>Content Warnings:</strong></p>
+                    <?php if (!empty($user_tags)): ?>
+                        <?php foreach ($user_tags as $tag): ?>
+                            <label>
+                                <input type="checkbox" name="tags[]" value="<?php echo esc_attr($tag); ?>">
+                                <?php echo esc_html($tag); ?>
+                            </label>
+                            <br>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <p>No tags found.</p>
+                    <?php endif; ?>
+                    <span id="tagErrorMessage" style="color: red; display: none;">Please select at least one Tags</span>
+                    <!-- <p><strong>Selected Text:</strong></p> -->
+                    <textarea id="selected_text" name="selected_text"></textarea>
+                    <span id="description_not_select_errorMessage" style="color: red; display: none;">Please Select Description</span>
+                    <br><br>
+                    <button type="submit" id="submit_description" value="Save Description">Submit</button>
+                    <span id="blur-featured-image-message1" style="color: green; display: none;">Saved!</span>
+                </form>
+                <script>    
+                    document.addEventListener("DOMContentLoaded", function () {
+                        jQuery(document).ready(function($) {
+                            var selectedTextArea = document.getElementById("selected_text");
+                            var widget = document.querySelector(".widget.widget_custom_user_widget");
+                            let selectContainer = document.querySelector('.sap-editable-area');
+                            console.log("checking select area", selectContainer);
+                            selectContainer.addEventListener("mouseup", function () {
+                                var selectedText = window.getSelection().toString();
+                                if (selectedText.length > 0) {
+                                    selectedTextArea.value = selectedText;
+                                    widget.style.display = "block";
+                                }
+                            });
+                            $("#description-form").on("submit", function(e) {
+                                e.preventDefault();  
+                                var selectedText = selectedTextArea.value.trim();
+                                let tagsChecked = $("input[name='tags[]']:checked").length > 0;
+                                if (selectedText === "" || !tagsChecked) {
+                                    if (!tagsChecked) {
+                                        $("#tagErrorMessage").css("display", "block");
+                                    } else {
+                                        $("#tagErrorMessage").css("display", "none");
+                                    }
+                                    if (selectedText === "") {
+                                        $("#description_not_select_errorMessage").show();
+                                    } else {
+                                        $("#description_not_select_errorMessage").hide();
+                                    }
+                                    return;
+                                } else {
+                                    var checkedTags = [];
+                                    $("input[name='tags[]']:checked").each(function() {
+                                        checkedTags.push($(this).val());
+                                    });
+                                    var tagsAttribute = checkedTags.join(", ");
+                                    var editableArea = document.querySelector('.sap-editable-area');
+                                    if (editableArea) {
+                                        
+                                        var pTags = editableArea.querySelectorAll('p');  
+                                                pTags.forEach(function(pTag) {
+                                                    var existingText = pTag.textContent.trim();
+                                                    console.log("existing test::", existingText);
+                                                    if (existingText.includes(selectedText)) {
+                                                        console.log("Selected text found! Replacing text...");
+                                                
+                                                        var updatedHTML = existingText.replace(selectedText, `<p class="deaddove-block-description" tags="${tagsAttribute   }">${selectedText}</p><p></p>`);
+                                                        pTag.innerHTML = updatedHTML; 
+                                                    }
+                                                });
+
+                                            var formData = {
+                                                'post_id': $("input[name='post_id']").val(),
+                                                'user_id': $("input[name='user_id']").val(),
+                                                'selected_text': selectedText,
+                                                'tags': tagsAttribute
+                                            };
+                                            $("#blur-featured-image-message1").show(); 
+                                            widget.style.display = "none";
+                                    }
+                                    $("#blur-featured-image-message1").show();
+                                }
+                            });
+                        });
+                    
+                    });
+                
+                </script>
+                <?php
+                echo $args['after_widget'];
+            // }
+        }
+    }
+  
+  
+}
 function register_custom_user_widget() {
-    register_widget('DeadDove_Widget');
+    register_widget('Custom_User_Widget');
 }
 add_action('widgets_init', 'register_custom_user_widget');  
-
+ 
 /* 
 Ajax method to update the description
 */
@@ -348,7 +700,7 @@ function save_user_description() {
     }
     $user_id = $_POST['user_id'];
     $post_id = $_POST['post_id'];
-
+    
     $selected_text = sanitize_text_field($_POST['selected_text'] ?? '');
     $selected_tags = $_POST['tags'] ?? [];
 
@@ -359,7 +711,7 @@ function save_user_description() {
     if (!$post || $post->post_author != $user_id) {
         wp_send_json_error(['message' => 'Unauthorized action']);
     }
-
+ 
     if (empty($selected_text)) {
         wp_send_json_error(['message' => 'No text selected']);
     }
@@ -367,7 +719,7 @@ function save_user_description() {
     if (strpos($post_content, $selected_text) !== false) {
         $tags_string = implode(',', array_map('sanitize_text_field', $selected_tags)); 
         $wrapped_text = '[content_warning tags="' . esc_attr($tags_string) . '"]' . $selected_text . '[/content_warning]';
-
+        
         $updated_content = str_replace($selected_text, $wrapped_text, $post_content);
         wp_update_post([
             'ID' => $post_id,
@@ -379,8 +731,8 @@ function save_user_description() {
         ob_clean();
         wp_send_json_error(['message' => 'Selected text not found in post content']);
     }
-
-
+     
+     
     wp_die();
 }
 add_action('wp_ajax_save_user_description', 'save_user_description');
@@ -397,19 +749,19 @@ function get_user_used_tags($user_id) {
         'posts_per_page' => -1,
         'fields' => 'ids'
     ];
-
+    
     $posts = get_posts($args);
-
+    
     if (!$posts) return [];
 
-    $tags = wp_get_object_terms($posts, 'content_warning', ['fields' => 'id=>name']);
+    $tags = wp_get_object_terms($posts, 'post_tag', ['fields' => 'id=>name']);
 
     if (!$tags || is_wp_error($tags)) return [];
 
     $tag_data = [];
 
     foreach ($tags as $tag_id => $tag_name) {
-        $tag_obj = get_term($tag_id, 'content_warning');  
+        $tag_obj = get_tag($tag_id);  
 
         $tag_data[] = [
             'name' => $tag_name,
@@ -429,36 +781,41 @@ add_shortcode('custom_user_widget', 'custom_user_widget_shortcode');
 
 
 add_action('wp', function() {
-
-
+  
+  
     if (is_page()) {
         $page_id = get_queried_object_id();
         $page_slug = get_post_field('post_name', $page_id);
         $page_url = get_permalink($page_id);
-
+         
     }
 });
 
 // Hook into BuddyBoss navigation
+add_action('bp_setup_nav', 'deaddove_add_buddyboss_profile_tab');
+
 function deaddove_add_buddyboss_profile_tab() {
     global $bp;
-
-    // Add to Settings menu
-    bp_core_new_subnav_item(array(
-        'name' => __('Content Warning Settings', 'textdomain'),
-        'slug' => 'content-warning-settings',
-        'parent_url' => trailingslashit(bp_displayed_user_domain() . bp_get_settings_slug()),
-        'parent_slug' => bp_get_settings_slug(),
-        'position' => 30,
+    $parent_slug = 'settings';
+    $parent_url = bp_loggedin_user_domain() . $parent_slug . '/';
+    bp_core_new_subnav_item([
+        'name'            => __('Content Warning Settings', 'textdomain'),
+        'slug'            => 'content-warning-settings',
+        'parent_slug'     => $parent_slug,
+        'parent_url'      => $parent_url,
+        'position'        => 60,
+        'show_for_displayed_user' => false,
         'screen_function' => 'deaddove_buddyboss_settings_page',
-        'user_has_access' => bp_core_can_edit_settings()
-    ));
+        'default_subnav_slug' => 'content-warning-settings',
+        'user_has_access' => bp_is_my_profile() || is_super_admin(), // Allow admins to see for debugging
+    ]);
 }
-add_action('bp_setup_nav', 'deaddove_add_buddyboss_profile_tab');
+add_action('bbapp_profile_tab_icon', 'deaddove_profile_tab_icon_callback', 10, 3);
 
 function deaddove_buddyboss_settings_page() {
     add_action('bp_template_content', 'deaddove_display_settings_form');
     bp_core_load_template('members/single/plugins');
+    
 }
 
 // Display User Settings Form
@@ -467,34 +824,35 @@ function deaddove_display_settings_form() {
         echo "<p>You need to log in to access this page.</p>";
         return;
     }
-
     $user_id = get_current_user_id();
-    $admin_warning_terms = get_option('deaddove_warning_terms', []);
-    $user_warning_terms = get_user_meta($user_id, 'deaddove_user_warning_terms', true);
+    $admin_tags = get_option('deaddove_warning_tags', []);
+    $user_tags = get_user_meta($user_id, 'deaddove_user_warning_tags', true);
     
-    // Ensure we have an array, using admin settings as default if user has no settings
-    $user_warning_terms = (!empty($user_warning_terms) && is_array($user_warning_terms)) ? $user_warning_terms : $admin_warning_terms;
-    
-    $all_terms = get_terms([
+    $user_tags = $user_tags !== '' ? $user_tags : $admin_tags;  
+    $all_tags = get_terms([
         'taxonomy' => 'content_warning',
         'hide_empty' => false,
     ]);
 
     ?>
     <h3 id="deaddove-warning-settings">Content Warning Settings</h3>
-
+    
     <form id="deaddove-settings-form">
         <?php wp_nonce_field('deaddove_user_profile_nonce', 'deaddove_user_nonce'); ?>
 
         <label><strong>Select tags for which a content warning should be shown:</strong></label>
         <div style="margin-top: 10px;">
-            <?php foreach ($all_terms as $term) : ?>
+            <ul class="terms-list">
+            <?php foreach ($all_tags as $tag) : ?>
+                <li class="term-item">
                 <label style="display: block; margin-bottom: 5px;">
-                    <input type="checkbox" name="deaddove_user_tags[]" value="<?php echo esc_attr($term->slug); ?>"
-                        <?php echo in_array($term->slug, $user_warning_terms) ? 'checked' : ''; ?>>
-                    <?php echo esc_html($term->name); ?>
+                    <input type="checkbox" name="deaddove_user_tags[]" value="<?php echo esc_attr($tag->slug); ?>"
+                        <?php echo in_array($tag->slug, $user_tags) ? 'checked' : ''; ?>>
+                    <?php echo esc_html($tag->name); ?>
                 </label>
             <?php endforeach; ?>
+            </li>
+            </ul>
         </div>
 
         <p class="description">These settings override the default warnings.</p>
@@ -543,18 +901,12 @@ function deaddove_save_user_settings() {
         wp_send_json_error(['message' => 'Security check failed.']);
     }
 
-    // Get existing user settings or admin defaults
-    $admin_warning_terms = get_option('deaddove_warning_terms', []);
-    $current_settings = get_user_meta($user_id, 'deaddove_user_warning_terms', true);
-    $current_settings = (!empty($current_settings) && is_array($current_settings)) ? $current_settings : $admin_warning_terms;
-
-    // Process the new settings
-    if (isset($_POST['deaddove_user_tags']) && is_array($_POST['deaddove_user_tags'])) {
-        $selected_terms = array_map('sanitize_text_field', wp_unslash($_POST['deaddove_user_tags']));
-        update_user_meta($user_id, 'deaddove_user_warning_terms', $selected_terms);
+    // Save selected tags or delete if empty
+    if (isset($_POST['deaddove_user_tags'])) {
+        $selected_tags = array_map('sanitize_text_field', wp_unslash($_POST['deaddove_user_tags']));
+        update_user_meta($user_id, 'deaddove_user_warning_tags', $selected_tags);
     } else {
-        // If no tags are selected, store an empty array rather than deleting the meta
-        update_user_meta($user_id, 'deaddove_user_warning_terms', []);
+        delete_user_meta($user_id, 'deaddove_user_warning_tags');
     }
 
     wp_send_json_success(['message' => 'Settings saved successfully!']);
@@ -574,14 +926,14 @@ function deaddove_custom_post_class($classes) {
     if (!$post_author_id) {
         return $classes;  
     }
-    $admin_warning_terms = get_option('deaddove_warning_terms', []);
-    $user_tags = get_user_meta($post_author_id, 'deaddove_user_warning_terms', true) ?: $admin_warning_terms;
-    $post_terms = wp_get_object_terms(get_the_ID(), 'content_warning', ['fields' => 'slugs']);
-
-    if (!empty(array_intersect($post_terms, $user_tags))) {
+    $admin_warning_tags = get_option('deaddove_warning_tags', []);
+    $user_tags = get_user_meta($post_author_id, 'deaddove_user_warning_tags', true) ?: $admin_warning_tags;
+    $post_tags = wp_get_post_tags(get_the_ID(), ['fields' => 'slugs']);
+     
+    if (!empty(array_intersect($post_tags, $user_tags))) {
         $classes[] = 'deaddove-blog-warning';  
     }
-
+ 
     return $classes;
 }
 add_filter('post_class', 'deaddove_custom_post_class');
@@ -599,6 +951,22 @@ class DeadDove_Widget extends WP_Widget {
         );
     }
     public function widget($args, $instance) {
+        $current_user = wp_get_current_user();
+   
+        $url = '#';
+       
+        if ($current_user->exists() && function_exists('bp_core_get_user_domain')) {
+             
+            $url = trailingslashit(bp_core_get_user_domain($current_user->ID)) . 'settings/content-warning-settings/';
+        }
+        else {
+            $redirect_to = home_url('/members/me/settings/content-warning-settings/');  
+            if (function_exists('bp_core_get_user_domain') && $current_user->exists()) {
+                $redirect_to = trailingslashit(bp_core_get_user_domain($current_user->ID)) . 'settings/content-warning-settings/';
+            }
+            $url = wp_login_url($redirect_to);  
+        }
+        // $url =  function_exists('bp_core_get_user_domain') ? bp_core_get_user_domain($current_user->ID)+'settings/content-warning-settings/' : '#';
         $warning_text = !empty($instance['warning_text']) ? $instance['warning_text'] : __('This content may not be suitable for all audiences.', 'deaddove');
         ?>
          <div class="deaddove-modal-wrapper-multiple-posts">
@@ -609,29 +977,32 @@ class DeadDove_Widget extends WP_Widget {
                         <button class="deaddove-show-content-btn">Show this content</button>
                         <button class="deaddove-hide-content-btn">Keep it hidden</button>
                     </div>
-                    <small><a href="#deaddove-warning-settings" class="deaddove-settings-link">Modify your content warning settings</a></small>
+                    <small><a href=<?php echo $url;?> class="deaddove-settings-link">Modify your content warning settings</a></small>
                 </div>
             </div>
         </div>
         <?php
-
+        
     }
 }
 
-
-
+ 
+function deaddove_register_widget() {
+    register_widget('DeadDove_Widget');
+}
+add_action('widgets_init', 'deaddove_register_widget');
 
 /* 
 Get Description for modal 
 */
 function deaddove_get_post_description() {
-
+    
     check_ajax_referer('deaddove_nonce', 'security');
 
     if (isset($_POST['post_id'])) {
         $post_id = intval($_POST['post_id']); 
         $tags = $_POST['postTags']; 
-
+         
         $post = get_post($post_id); 
         if ($post) {
             if(!empty($tags)){
@@ -650,21 +1021,21 @@ function deaddove_get_post_description() {
             }else{
             $post = get_post($post_id); 
             $post_author_id = get_post_field('post_author', $post_id); 
-            $admin_warning_terms = get_option('deaddove_warning_terms', []);
-            $user_tags = get_user_meta($post_author_id, 'deaddove_user_warning_terms', true) ?: $admin_warning_terms;
-            $post_terms = wp_get_object_terms($post_id, 'content_warning', ['fields' => 'slugs']);  
-            $matching_tags = array_intersect($post_terms, $user_tags);
+            $admin_warning_tags = get_option('content_warning', []);
+            $user_tags = get_user_meta($post_author_id, 'deaddove_user_warning_tags', true) ?: $admin_warning_tags;
+            $post_tags = wp_get_post_tags($post_id, ['fields' => 'slugs']);  
+            $matching_tags = array_intersect($post_tags, $user_tags);
             $tagDescriptions = [];
             if (!empty($matching_tags)) {
                 foreach($matching_tags as $tag_slug){
-                    $tag = get_term_by('slug', $tag_slug, 'content_warning'); // Slug se tag details lo
+                    $tag = get_term_by('slug', $tag_slug, 'post_tag'); // Slug se tag details lo
                     if ($tag && !is_wp_error($tag) && !empty($tag->description)) {
                         $tagDescriptions[] = $tag->description;
                     }
                 }
                 }
             $tagDescriptionString = !empty($tagDescriptions) ? implode(' | ', $tagDescriptions) : 'No matching tag descriptions';
-
+            
             wp_send_json_success($tagDescriptionString);  
             }
         } else {
@@ -677,7 +1048,7 @@ function deaddove_get_post_description() {
 add_action('wp_ajax_deaddove_get_post_description', 'deaddove_get_post_description');  
 add_action('wp_ajax_nopriv_deaddove_get_post_description', 'deaddove_get_post_description');  
 
-
+ 
 function deaddove_enqueue_scripts() {
     wp_enqueue_script('deaddove-frontend-js', plugin_dir_url(__FILE__) . 'js/deaddove-script.js', array('jquery'), null, true);
 
@@ -692,27 +1063,55 @@ add_action('wp_enqueue_scripts', 'deaddove_enqueue_scripts');
 Adding content warning field in time line
 */
 function bboss_add_custom_field_to_activity_form() {
+    $user_id = get_current_user_id();
+    
+    $admin_warning_terms = get_option('content_warning', []);
+    $userTerms = get_user_meta($user_id, 'deaddove_user_warning_tags', true) ?: $admin_warning_terms; 
+    if (!is_array($userTerms)) {
+        $userTerms = [];
+    }
     $terms = get_terms([
         'taxonomy' => 'content_warning',
         'hide_empty' => false,
     ]);
     ?>
     <div class="custom-activity-field" style="margin-top: 10px;">
-        <label for="content_warning_tag">Content Warnings:</label>
-        <div style="border: 1px solid #ddd; padding: 8px; height:200px; overflow:auto;">
-            <?php foreach ($terms as $term) : ?>
-                <label style="display: block; margin-bottom: 5px;">
-                    <input type="checkbox" name="content_warning_tags[]" value="<?php echo esc_attr($term->term_id); ?>">
-                    <?php echo esc_html($term->name); ?>
-                </label>
-            <?php endforeach; ?>
+       <div class="accordion-header1" style="cursor: pointer; font-weight: bold; background: #f1f1f1; padding: 10px; border: 1px solid #ddd;">
+          Content Warnings <span style="float: right;">&#9660;</span>
         </div>
+        <div class="accordion-content1" style="display: none; padding: 10px; border: 1px solid #ddd; height:200px; overflow-y:auto">
+        <?php foreach ($terms as $term) :
+            if (in_array($term->slug, $userTerms)) :
+        ?>
+            <label style="display: block; margin-bottom: 5px;">
+                <input type="checkbox" name="content_warning_tags[]" value="<?php echo esc_attr($term->term_id); ?>">
+                <?php echo esc_html($term->name); ?>
+                </label>
+                <?php 
+            endif; 
+        endforeach; ?>
     </div>
-    <?php
+    <script>
+        jQuery(document).ready(function($) {
+                $(".accordion-header1").click(function () {
+                console.log("hello checking why it's not working as expect")
+                // console.log("checking print this", this)
+                $(".accordion-content1").slideToggle(300); 
+                const icon = $(this).find("span");
+                // console.log("checking main content", icon.text(), icon.text()=== "&#9660;")
+                // icon.html(icon.text()=== "&#9660;" ? "&#9650;" : "&#9660;");
+                icon.text(icon.text() === "▼" ? "▲" : "▼"); 
+            });
+        }
+        )
+    </script>
+    </div>
+        <?php
+
 }
 add_action('bp_activity_post_form_options', 'bboss_add_custom_field_to_activity_form');
 
-
+ 
 function bboss_save_custom_activity_field($content, $user_id, $activity_id) {
     if (!isset($_POST['content_warning_tags']) || empty($_POST['content_warning_tags'])) {
         return;
@@ -759,12 +1158,12 @@ function deaddove_content_warning_ajax_handler() {
         $activity_id = $activity->id;
         $content_warning_tag = bp_activity_get_meta($activity_id, 'content_warning_tag', true);
         if ($content_warning_tag) {
-
+            
             $tag_ids = explode(',', $content_warning_tag); 
             $tag_names = [];
             $tag_descriptions = [];
             foreach ($tag_ids as $tag_id) {
-                $tag = get_term(intval($tag_id), 'content_warning');
+                $tag = get_term(intval($tag_id), 'post_tag');
                 if ($tag && !is_wp_error($tag)) {
                     $tag_names[] = $tag->name;  
                     $tag_descriptions[] = $tag->description;  
@@ -787,7 +1186,6 @@ function deaddove_content_warning_ajax_handler() {
 add_action('wp_ajax_deaddove_content_warning', 'deaddove_content_warning_ajax_handler');  
 add_action('wp_ajax_nopriv_deaddove_content_warning', 'deaddove_content_warning_ajax_handler');  
 
-
 function get_custom_widget_callback() {
     if ( !isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'deaddove_nonce') ) {
         wp_die('Permission Denied');
@@ -796,21 +1194,57 @@ function get_custom_widget_callback() {
         wp_die('Permission Denied');
     }
     $user_id = get_current_user_id();
-    $admin_warning_terms = get_option('deaddove_warning_terms', []);
-    $user_tags = get_user_meta($user_id, 'deaddove_user_warning_terms', true) ?: $admin_warning_terms;  
+    $admin_warning_terms = get_option('content_warning', []);
+    $user_tags = get_user_meta($user_id, 'deaddove_user_warning_tags', true) ?: $admin_warning_terms;
+
     if (empty($user_tags)) {
         wp_send_json_error(array(
             'message' => 'No warning tags available',  
         ));
     } 
-
     wp_send_json_success(array(
         'user_content_warning_tag' =>$user_tags,   
     ));
 }
+
 add_action('wp_ajax_get_custom_widget', 'get_custom_widget_callback');   
-add_action('wp_ajax_nopriv_get_custom_widget', 'get_custom_widget_callback');  
+add_action('wp_ajax_nopriv_get_custom_widget', 'get_custom_widget_callback'); 
 
 
+/*
 
-?>
+Fetching current user for js link 
+*/
+
+function deaddove_current_user_ajax_handler() {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'deaddove_nonce')) {
+        wp_send_json_error(array('message' => 'Invalid nonce'));
+    }
+
+    // Current user ko nikalna
+    $current_user = wp_get_current_user();
+
+    // Check if user is logged in
+    if (!$current_user->exists()) {
+        wp_send_json_error(array('message' => 'User not logged in'));
+    }
+    // User ki details collect karna
+    $user_data = array(
+        'user_id' => $current_user->ID,
+        'username' => $current_user->user_login,
+        'display_name' => $current_user->display_name,
+        'email' => $current_user->user_email,
+        'profile_url' => get_author_posts_url($current_user->ID), // WordPress author profile link
+        'registered_date' => $current_user->user_registered,
+        // Agar BuddyPress use kar rahe ho, to BuddyPress profile link
+        'bp_profile_url' => function_exists('bp_core_get_user_domain') ? bp_core_get_user_domain($current_user->ID) : '',
+        // Aur bhi fields add kar sakte ho, jaise first_name, last_name, etc.
+        'first_name' => get_user_meta($current_user->ID, 'first_name', true),
+        'last_name' => get_user_meta($current_user->ID, 'last_name', true),
+    );
+
+    // Success response with user data
+    wp_send_json_success($user_data);
+}
+add_action('wp_ajax_deaddove_current_user', 'deaddove_current_user_ajax_handler');  
+add_action('wp_ajax_nopriv_deaddove_current_user', 'deaddove_current_user_ajax_handler');

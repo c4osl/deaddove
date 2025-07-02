@@ -1,20 +1,20 @@
 var ajaxResponse = null;
-
+let currentUser = null
 document.addEventListener("DOMContentLoaded", function () {
   const mediaContainer = jQuery(".media");
   const memberPageContainer = jQuery(".member-media");
   const videoContainer = jQuery("#video-stream");
- const mainContainerr = jQuery('#buddypress');
+  const mainContainerr = jQuery('#buddypress');
   const activityContainer = jQuery("#activity-stream");
   var newDiv = jQuery(`<div class="deaddove-media-modal-wrapper">
             <div class="deaddove-modal" style="display:none;">
                 <div class="deaddove-modal-content">
-                    <p class="description-text">Data not good</p>
+                    <p class="description-text">Data not avalaible</p>
                     <div class="modal-buttons">
                         <button class="deaddove-show-content-btn">Show this content</button>
                         <button class="deaddove-hide-content-btn">Keep it hidden</button>
                     </div>
-                    <small><a href="#deaddove-warning-settings" class="deaddove-settings-link">Modify your content warning settings</a></small>
+                    <small><a href="${currentUser !== null ? currentUser.bp_profile_url : '#'}" class="deaddove-settings-link">Modify your content warning settings</a></small>
                 </div>
             </div> `);
   mediaContainer.append(newDiv);
@@ -23,14 +23,13 @@ document.addEventListener("DOMContentLoaded", function () {
   activityContainer.append(newDiv);
   mainContainerr.append(newDiv);
   const targetNode = document.getElementById("media-stream");
-   
+
   function getContentWarningData() {
     return new Promise(function (resolve, reject) {
       var data = {
         action: "deaddove_content_warning",
         nonce: deaddove_ajax.nonce,
       };
-
       jQuery
         .post(deaddove_ajax.ajaxurl, data, function (response) {
           if (response.success) {
@@ -46,6 +45,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   getContentWarningData()
     .then(function (activities) {
+      console.log("checking acivities", activities);
       ajaxResponse = activities;
       activities.forEach(function (activity) {
         appendContentWarningToParent(activity);
@@ -54,27 +54,54 @@ document.addEventListener("DOMContentLoaded", function () {
     .catch(function (error) {
       console.error("Error occurred:", error);
     });
+  /*
+  Fetch current User content warning link
+  */
+  function getCurrentUser() {
+    return new Promise(function (resolve, reject) {
+      jQuery
+        .post(deaddove_ajax.ajaxurl, {
+          action: "deaddove_current_user",
+          nonce: deaddove_ajax.nonce,
+        })
+        .done(function (response) {
+          if (response.success) {
+            resolve(response.data);
+          } else {
+            reject("Error: " + response.data.message);
+          }
+        })
+        .fail(function () {
+          reject("AJAX request failed");
+        });
+    });
+  }
+  getCurrentUser().then(function (userData) {
+    if (userData) {
+      // console.log("current User Data:", userData);
+      currentUser = userData;
+      const privacyItem = document.querySelector('#wp-admin-bar-my-account-settings-profile');
+            if (privacyItem) {
+                // Create a new list item for the content warning settings
+                const newItem = document.createElement('li');
+                newItem.id = 'wp-admin-bar-my-account-settings-content-warning';
+                const newLink = document.createElement('a');
+                newLink.className = 'ab-item';
+                newLink.href = currentUser.bp_profile_url + 'settings/content-warning-settings/';
+                newLink.innerHTML = 'Content Warning Settings';
+                newItem.appendChild(newLink); 
+                privacyItem.parentNode.insertBefore(newItem, privacyItem.nextSibling);
+            }
+    }
+  }).catch(function (error) {
+    console.error("Error fetching user data:", error);
+  });
 
-  // function appendContentWarningToParent(activity) {
-  //   var parentElements = jQuery(
-  //     '[data-parent-activity-id="' + activity.activity_id + '"]'
-  //   );
-  //   if (parentElements.length) {
-  //     parentElements.each(function () {
-  //       console.log("this", jQuery(this));
- 
-  //       if (jQuery(this).attr("data-attachment-id")) {
-  //         console.log("this", jQuery(this));
-  //         jQuery(this).addClass("deaddove-media-warning");
-  //       }
-  //     });
-  //   }
-  // }
   jQuery(document).on("click", ".deaddove-media-warning", function (event) {
     event.preventDefault();
     event.stopPropagation();
     const mediaContainer = jQuery(this);
-      
+
     event.stopImmediatePropagation();
     jQuery(".media-theatre").hide();
     jQuery(".video-theatre").hide();
@@ -85,13 +112,25 @@ document.addEventListener("DOMContentLoaded", function () {
       const showContentButton = modalWrapper.find(".deaddove-show-content-btn");
       const hideContentButton = modalWrapper.find(".deaddove-hide-content-btn");
       const descriptionText = modalWrapper.find(".description-text");
+      const modalLink = modalWrapper.find(".deaddove-settings-link");
+      
+      // modalWrapper.addClass("deaddove-media-modal-wrapper-active");
       const currentActivity = ajaxResponse.find((activity) => {
         return activity.activity_id === Number(postParentId);
       });
-      
+      console.log("current Description", currentActivity)
+      // modalLink.attr("href", currentUser !== null ? currentUser.bp_profile_url+'settings/content-warning-settings/' : '#');
+      if (currentUser && currentUser.bp_profile_url) {
+        modalLink.attr('href', currentUser.bp_profile_url + 'settings/content-warning-settings/');
+      } else {
+        const redirectTo = currentUser && currentUser.bp_profile_url
+          ? currentUser.bp_profile_url + 'settings/content-warning-settings/'
+          : window.location.origin + '/members/me/settings/content-warning-settings/';
+        modalLink.attr('href', wpLoginUrl + '?redirect_to=' + encodeURIComponent(redirectTo));
+      }
       descriptionText.text(
         currentActivity.content_warning_description ||
-          "This content requires your agreement to view."
+        "This content requires your agreement to view."
       );
       modal.show();
       showContentButton.on("click", function () {
@@ -106,6 +145,9 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
+  /*
+This is used for content warning widget in Post
+  */
   jQuery(document).ready(async function ($) {
     try {
       const response = await fetchWidgetData();
@@ -146,9 +188,9 @@ document.addEventListener("DOMContentLoaded", function () {
       const CategorySetting = $("#sap-widget-container");
       CategorySetting.append(formHtml);
       $(".accordion-header").click(function () {
-        $(".accordion-content").slideToggle(300); 
+        $(".accordion-content").slideToggle(300);
         const icon = $(this).find("span");
-        icon.html(icon.html() === "&#9660;" ? "&#9650;" : "&#9660;"); 
+        icon.html(icon.html() === "&#9660;" ? "&#9650;" : "&#9660;");
       });
       var widget = document.querySelector(".widget.widget_custom_user_widget");
       let selectContainer = document.querySelector(".sap-editable-area");
@@ -227,15 +269,12 @@ document.addEventListener("DOMContentLoaded", function () {
         });
       });
     }
-
   });
-    
-  
+
+
   let observer = new MutationObserver(function (mutations) {
-    // videoContainer.append(newDiv);
-    // activityContainer.append(newDiv);
     mutations.forEach(function (mutation) {
-      if(ajaxResponse!==null){
+      if (ajaxResponse !== null) {
         ajaxResponse.forEach(function (activity) {
           appendContentWarningToParent(activity);
         });
@@ -254,34 +293,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       });
     }
+
   }
-    
+
 });
-// document.addEventListener("DOMContentLoaded", function () {
-//   let className = "custom-class"; 
-  
-//   let observer = new MutationObserver(function (mutations) {
-//     mutations.forEach(function (mutation) {
-//       let containers = document.querySelectorAll(".bb-item-thumb");  
-//       containers.forEach(function (container) {
-//         if (!container.classList.contains(className)) {
-//           container.classList.add(className);
-//         }
-//       });
-//     });
-//   });
- 
-   
-//   observer.observe(document.body, { childList: true, subtree: true });
- 
-   
-//   let savedClass = localStorage.getItem("custom-class");
-//   if (savedClass) {
-//     setTimeout(() => {
-//       let containers = document.querySelectorAll(".bb-item-thumb");
-//       containers.forEach(function (container) {
-//         container.classList.add(savedClass);
-//       });
-//     }, 1000);  
-//   }
-// });

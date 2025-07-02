@@ -90,3 +90,30 @@ DEAD-DOVE SETTING FORM
     font-size: 12px;
     color: #666;
 }
+/* 
+//////////////////////////
+DEAD-DOVE SETTINGS CONTENT WARNING
+///////////////////////
+
+*/
+#content-warning-settings-personal-li a:before {
+    content: "\ee27";    
+    font: normal normal normal 14px / 1 bb-icons;
+    /* speak: none; */
+    display: inline-block;
+    font-size: 18px;
+    margin-right: 10px;
+    text-decoration: inherit;
+    text-transform: none;
+    -webkit-font-smoothing: antialiased;
+}
+.terms-list{
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.terms-list .term-item label{
+    display: block;
+    padding: 5px 0;
+    cursor: pointer;
+}
