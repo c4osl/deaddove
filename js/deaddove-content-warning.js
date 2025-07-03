@@ -164,8 +164,8 @@ This is used for content warning widget in Post
         userTags.forEach(function (tag) {
           formHtml += `
             <label>
-              <input type="checkbox" name="tags[]" value="${tag}">
-              ${tag}
+              <input type="checkbox" name="tags[]" value="${tag.slug}">
+              ${tag.name}
             </label>
             <br>
           `;

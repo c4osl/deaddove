@@ -340,10 +340,6 @@ add_action('personal_options_update', 'deaddove_save_user_profile_settings');
 add_action('edit_user_profile_update', 'deaddove_save_user_profile_settings');
 
 
-
-
-
-
 function deaddove_display_meta_box($post) {
     // Retrieve values or set default for new posts
     $boolean_field_1 = get_post_meta($post->ID, '_blured_featured_image', true);
@@ -571,9 +567,7 @@ class Custom_User_Widget extends WP_Widget {
             if (strpos($_SERVER['REQUEST_URI'], '/add-new-post') === false) {
                 return;
             }
-            // $admin_tags = get_option('deaddove_warning_tags', []);
-             
-            // $user_tags = get_user_meta(get_current_user_id(), 'deaddove_warning_tags', true) ?: $admin_tags;
+       
             $admin_warning_tags = get_option('content_warning', []);
             $user_tags = get_user_meta($user_id, 'content_warning', true) ?: $admin_warning_tags;
           
@@ -825,10 +819,13 @@ function deaddove_display_settings_form() {
         return;
     }
     $user_id = get_current_user_id();
-    $admin_tags = get_option('deaddove_warning_tags', []);
-    $user_tags = get_user_meta($user_id, 'deaddove_user_warning_tags', true);
-    
-    $user_tags = $user_tags !== '' ? $user_tags : $admin_tags;  
+    // $admin_tags = get_option('deaddove_warning_tags', []);
+    // Getting User selected tags from database
+    $userSelectedTags = get_user_meta($user_id, 'deaddove_user_warning_tags', true);
+    // $user_tags = $user_tags !== '' ? $user_tags : $admin_tags; 
+    $userSelectedTags = $userSelectedTags !== '' ? $userSelectedTags : []; 
+     
+    // Getting all content warning tags
     $all_tags = get_terms([
         'taxonomy' => 'content_warning',
         'hide_empty' => false,
@@ -847,7 +844,7 @@ function deaddove_display_settings_form() {
                 <li class="term-item">
                 <label style="display: block; margin-bottom: 5px;">
                     <input type="checkbox" name="deaddove_user_tags[]" value="<?php echo esc_attr($tag->slug); ?>"
-                        <?php echo in_array($tag->slug, $user_tags) ? 'checked' : ''; ?>>
+                    <?php echo in_array($tag->slug, $userSelectedTags) ? 'checked' : ''; ?>>
                     <?php echo esc_html($tag->name); ?>
                 </label>
             <?php endforeach; ?>
@@ -1081,25 +1078,24 @@ function bboss_add_custom_field_to_activity_form() {
         </div>
         <div class="accordion-content1" style="display: none; padding: 10px; border: 1px solid #ddd; height:200px; overflow-y:auto">
         <?php foreach ($terms as $term) :
-            if (in_array($term->slug, $userTerms)) :
+            // if (in_array($term->slug, $userTerms)) :
         ?>
             <label style="display: block; margin-bottom: 5px;">
                 <input type="checkbox" name="content_warning_tags[]" value="<?php echo esc_attr($term->term_id); ?>">
                 <?php echo esc_html($term->name); ?>
                 </label>
                 <?php 
-            endif; 
+            // endif; 
         endforeach; ?>
     </div>
     <script>
         jQuery(document).ready(function($) {
                 $(".accordion-header1").click(function () {
                 console.log("hello checking why it's not working as expect")
-                // console.log("checking print this", this)
+                 
                 $(".accordion-content1").slideToggle(300); 
                 const icon = $(this).find("span");
-                // console.log("checking main content", icon.text(), icon.text()=== "&#9660;")
-                // icon.html(icon.text()=== "&#9660;" ? "&#9650;" : "&#9660;");
+             
                 icon.text(icon.text() === "▼" ? "▲" : "▼"); 
             });
         }
@@ -1119,8 +1115,8 @@ function bboss_save_custom_activity_field($content, $user_id, $activity_id) {
     // Sanitize and convert array to comma-separated string
     $selected_tags = array_map('intval', $_POST['content_warning_tags']);
     $tags_string = implode(',', $selected_tags);
-
-    bp_activity_update_meta($activity_id, 'content_warning_tag', $tags_string);
+    
+    bp_activity_update_meta($activity_id, 'content_warning_tags', $tags_string);
 }
 add_action('bp_activity_posted_update', 'bboss_save_custom_activity_field', 10, 3);
 
@@ -1156,14 +1152,13 @@ function deaddove_content_warning_ajax_handler() {
     $activity_data = [];
     foreach ($activities['activities'] as $activity) {
         $activity_id = $activity->id;
-        $content_warning_tag = bp_activity_get_meta($activity_id, 'content_warning_tag', true);
+        $content_warning_tag = bp_activity_get_meta($activity_id, 'content_warning_tags', true);
         if ($content_warning_tag) {
-            
             $tag_ids = explode(',', $content_warning_tag); 
             $tag_names = [];
             $tag_descriptions = [];
             foreach ($tag_ids as $tag_id) {
-                $tag = get_term(intval($tag_id), 'post_tag');
+                $tag = get_term(intval($tag_id), 'content_warning');
                 if ($tag && !is_wp_error($tag)) {
                     $tag_names[] = $tag->name;  
                     $tag_descriptions[] = $tag->description;  
@@ -1179,7 +1174,7 @@ function deaddove_content_warning_ajax_handler() {
         }
     }
     if (empty($activity_data)) {
-        wp_send_json_error(array('message' => 'No activities with content warning tags.'));
+        wp_send_json_error(array('message' => 'No activities with content warning Terms.'));
     }
     wp_send_json_success(array('activities' => $activity_data));
 }
@@ -1194,16 +1189,20 @@ function get_custom_widget_callback() {
         wp_die('Permission Denied');
     }
     $user_id = get_current_user_id();
-    $admin_warning_terms = get_option('content_warning', []);
-    $user_tags = get_user_meta($user_id, 'deaddove_user_warning_tags', true) ?: $admin_warning_terms;
+    // $admin_warning_terms = get_option('content_warning', []);
+    $all_tags = get_terms([
+        'taxonomy' => 'content_warning',
+        'hide_empty' => false,
+    ]);
+    // $all_tags = get_user_meta($user_id, 'deaddove_user_warning_tags', true) ?: $admin_warning_terms;
 
-    if (empty($user_tags)) {
+    if (empty($all_tags)) {
         wp_send_json_error(array(
             'message' => 'No warning tags available',  
         ));
     } 
     wp_send_json_success(array(
-        'user_content_warning_tag' =>$user_tags,   
+        'user_content_warning_tag' =>$all_tags,   
     ));
 }
 

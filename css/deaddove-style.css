@@ -97,11 +97,11 @@ DEAD-DOVE SETTINGS CONTENT WARNING
 
 */
 #content-warning-settings-personal-li a:before {
-    content: "\ee27";    
+    content: "⚠️";    
     font: normal normal normal 14px / 1 bb-icons;
     /* speak: none; */
     display: inline-block;
-    font-size: 18px;
+    font-size: 14px;
     margin-right: 10px;
     text-decoration: inherit;
     text-transform: none;
