@@ -785,7 +785,9 @@ add_action('wp', function() {
     }
 });
 
-// Hook into BuddyBoss navigation
+/*
+Content warning tab navigation settings 
+*/
 add_action('bp_setup_nav', 'deaddove_add_buddyboss_profile_tab');
 
 function deaddove_add_buddyboss_profile_tab() {
@@ -812,7 +814,10 @@ function deaddove_buddyboss_settings_page() {
     
 }
 
-// Display User Settings Form
+/*
+########Form of Content warning setting tab
+######## It's used where content warning listed
+*/
 function deaddove_display_settings_form() {
     if (!is_user_logged_in()) {
         echo "<p>You need to log in to access this page.</p>";
@@ -1112,11 +1117,19 @@ function bboss_save_custom_activity_field($content, $user_id, $activity_id) {
     if (!isset($_POST['content_warning_tags']) || empty($_POST['content_warning_tags'])) {
         return;
     }
-    // Sanitize and convert array to comma-separated string
-    $selected_tags = array_map('intval', $_POST['content_warning_tags']);
-    $tags_string = implode(',', $selected_tags);
+
+    $tags = $_POST['content_warning_tags'];
+
     
+    if (!is_array($tags)) {
+        $tags = array($tags);
+    }
+
+    $selected_tags = array_map('intval', $tags);
+    $tags_string = implode(',', $selected_tags);
+
     bp_activity_update_meta($activity_id, 'content_warning_tags', $tags_string);
+    // bp_activity_update_meta($activity_id, 'content_warning_tags', $tags_string);
 }
 add_action('bp_activity_posted_update', 'bboss_save_custom_activity_field', 10, 3);
 
@@ -1145,14 +1158,26 @@ function deaddove_content_warning_ajax_handler() {
         'per_page' => 100,  
         'page' => 1, 
     );
-    $activities = bp_activity_get($args);
-    if (empty($activities['activities'])) {
-        wp_send_json_error(array('message' => 'No activities found.'));
+    if(isset($_POST['activities']) && !empty($_POST['activities'])){
+        // print_r($_POST['activities']);
+        $activities = $_POST['activities'];
     }
+    else{
+
+        $activities = bp_activity_get($args);
+    }
+    // echo "<pre>";
+    // print_r($activities);
+    // echo "</pre>";
+    // if (empty($activities['activities'])) {
+    //     wp_send_json_error(array('message' => 'No activities found.'));
+    // }
+
     $activity_data = [];
-    foreach ($activities['activities'] as $activity) {
-        $activity_id = $activity->id;
-        $content_warning_tag = bp_activity_get_meta($activity_id, 'content_warning_tags', true);
+    foreach ($activities as $activity) {
+        // $activity_id = $activity->id;
+        // echo $activity;
+        $content_warning_tag = bp_activity_get_meta(intval($activity), 'content_warning_tags', true);
         if ($content_warning_tag) {
             $tag_ids = explode(',', $content_warning_tag); 
             $tag_names = [];
@@ -1166,7 +1191,7 @@ function deaddove_content_warning_ajax_handler() {
             }
             if ($tag && !is_wp_error($tag)) {
                 $activity_data[] = [
-                    'activity_id' => $activity_id,
+                    'activity_id' => intval($activity),
                     'content_warning_tag' => implode(', ', $tag_names), 
                     'content_warning_description'=>implode(' | ', $tag_descriptions), 
                 ];

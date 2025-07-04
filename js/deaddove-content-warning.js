@@ -1,10 +1,12 @@
 var ajaxResponse = null;
-let currentUser = null
+let processedActivityIds = new Set();
+let currentUser = null;
+let allContentWarning = [];
 document.addEventListener("DOMContentLoaded", function () {
   const mediaContainer = jQuery(".media");
   const memberPageContainer = jQuery(".member-media");
   const videoContainer = jQuery("#video-stream");
-  const mainContainerr = jQuery('#buddypress');
+  const mainContainerr = jQuery("#buddypress");
   const activityContainer = jQuery("#activity-stream");
   var newDiv = jQuery(`<div class="deaddove-media-modal-wrapper">
             <div class="deaddove-modal" style="display:none;">
@@ -14,7 +16,9 @@ document.addEventListener("DOMContentLoaded", function () {
                         <button class="deaddove-show-content-btn">Show this content</button>
                         <button class="deaddove-hide-content-btn">Keep it hidden</button>
                     </div>
-                    <small><a href="${currentUser !== null ? currentUser.bp_profile_url : '#'}" class="deaddove-settings-link">Modify your content warning settings</a></small>
+                    <small><a href="${
+                      currentUser !== null ? currentUser.bp_profile_url : "#"
+                    }" class="deaddove-settings-link">Modify your content warning settings</a></small>
                 </div>
             </div> `);
   mediaContainer.append(newDiv);
@@ -24,15 +28,24 @@ document.addEventListener("DOMContentLoaded", function () {
   mainContainerr.append(newDiv);
   const targetNode = document.getElementById("media-stream");
 
-  function getContentWarningData() {
+  function getContentWarningData(parentActivityIds) {
     return new Promise(function (resolve, reject) {
       var data = {
         action: "deaddove_content_warning",
         nonce: deaddove_ajax.nonce,
+        activities: parentActivityIds,
       };
       jQuery
         .post(deaddove_ajax.ajaxurl, data, function (response) {
           if (response.success) {
+            response.data.activities.forEach(function(activity) {
+              processedActivityIds.add(activity.activity_id.toString());  
+              
+              if (!allContentWarning.some(item => item.activity_id === activity.activity_id)) {
+                allContentWarning.push(activity);  
+              }
+            });
+             
             resolve(response.data.activities);
           } else {
             reject("Error: " + response.data.message);
@@ -43,17 +56,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
   }
-  getContentWarningData()
-    .then(function (activities) {
-      console.log("checking acivities", activities);
-      ajaxResponse = activities;
-      activities.forEach(function (activity) {
-        appendContentWarningToParent(activity);
-      });
-    })
-    .catch(function (error) {
-      console.error("Error occurred:", error);
-    });
+
   /*
   Fetch current User content warning link
   */
@@ -76,26 +79,31 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
   }
-  getCurrentUser().then(function (userData) {
-    if (userData) {
-      // console.log("current User Data:", userData);
-      currentUser = userData;
-      const privacyItem = document.querySelector('#wp-admin-bar-my-account-settings-profile');
-            if (privacyItem) {
-                // Create a new list item for the content warning settings
-                const newItem = document.createElement('li');
-                newItem.id = 'wp-admin-bar-my-account-settings-content-warning';
-                const newLink = document.createElement('a');
-                newLink.className = 'ab-item';
-                newLink.href = currentUser.bp_profile_url + 'settings/content-warning-settings/';
-                newLink.innerHTML = 'Content Warning Settings';
-                newItem.appendChild(newLink); 
-                privacyItem.parentNode.insertBefore(newItem, privacyItem.nextSibling);
-            }
-    }
-  }).catch(function (error) {
-    console.error("Error fetching user data:", error);
-  });
+  getCurrentUser()
+    .then(function (userData) {
+      if (userData) {
+        // console.log("current User Data:", userData);
+        currentUser = userData;
+        const privacyItem = document.querySelector(
+          "#wp-admin-bar-my-account-settings-profile"
+        );
+        if (privacyItem) {
+          // Create a new list item for the content warning settings
+          const newItem = document.createElement("li");
+          newItem.id = "wp-admin-bar-my-account-settings-content-warning";
+          const newLink = document.createElement("a");
+          newLink.className = "ab-item";
+          newLink.href =
+            currentUser.bp_profile_url + "settings/content-warning-settings/";
+          newLink.innerHTML = "Content Warning Settings";
+          newItem.appendChild(newLink);
+          privacyItem.parentNode.insertBefore(newItem, privacyItem.nextSibling);
+        }
+      }
+    })
+    .catch(function (error) {
+      console.error("Error fetching user data:", error);
+    });
 
   jQuery(document).on("click", ".deaddove-media-warning", function (event) {
     event.preventDefault();
@@ -113,24 +121,32 @@ document.addEventListener("DOMContentLoaded", function () {
       const hideContentButton = modalWrapper.find(".deaddove-hide-content-btn");
       const descriptionText = modalWrapper.find(".description-text");
       const modalLink = modalWrapper.find(".deaddove-settings-link");
-      
+
       // modalWrapper.addClass("deaddove-media-modal-wrapper-active");
-      const currentActivity = ajaxResponse.find((activity) => {
+      const currentActivity = allContentWarning.find((activity) => {
         return activity.activity_id === Number(postParentId);
       });
-      console.log("current Description", currentActivity)
+      // console.log("current Description", currentActivity);
       // modalLink.attr("href", currentUser !== null ? currentUser.bp_profile_url+'settings/content-warning-settings/' : '#');
       if (currentUser && currentUser.bp_profile_url) {
-        modalLink.attr('href', currentUser.bp_profile_url + 'settings/content-warning-settings/');
+        modalLink.attr(
+          "href",
+          currentUser.bp_profile_url + "settings/content-warning-settings/"
+        );
       } else {
-        const redirectTo = currentUser && currentUser.bp_profile_url
-          ? currentUser.bp_profile_url + 'settings/content-warning-settings/'
-          : window.location.origin + '/members/me/settings/content-warning-settings/';
-        modalLink.attr('href', wpLoginUrl + '?redirect_to=' + encodeURIComponent(redirectTo));
+        const redirectTo =
+          currentUser && currentUser.bp_profile_url
+            ? currentUser.bp_profile_url + "settings/content-warning-settings/"
+            : window.location.origin +
+              "/members/me/settings/content-warning-settings/";
+        modalLink.attr(
+          "href",
+          wpLoginUrl + "?redirect_to=" + encodeURIComponent(redirectTo)
+        );
       }
       descriptionText.text(
         currentActivity.content_warning_description ||
-        "This content requires your agreement to view."
+          "This content requires your agreement to view."
       );
       modal.show();
       showContentButton.on("click", function () {
@@ -270,15 +286,69 @@ This is used for content warning widget in Post
       });
     }
   });
-
-
+   
+  getContentWarningData()
+        .then(function (activities) {
+          // Process the response
+          ajaxResponse = activities;
+          activities.forEach(function (activity) {
+            appendContentWarningToParent(activity);
+          });
+        })
+        .catch(function (error) {
+          console.error("Error occurred:", error);
+        })
   let observer = new MutationObserver(function (mutations) {
     mutations.forEach(function (mutation) {
-      if (ajaxResponse !== null) {
-        ajaxResponse.forEach(function (activity) {
-          appendContentWarningToParent(activity);
+      // if (ajaxResponse !== null) {
+      //   ajaxResponse.forEach(function (activity) {
+      //     appendContentWarningToParent(activity);
+      //   });
+      // }
+      var parentActivityIds = [];
+      if(allContentWarning.length !== 0) {
+      allContentWarning.forEach(function (activity) {
+        appendContentWarningToParent(activity);
+      });
+    }
+      if (jQuery('.media-list').length) {
+        jQuery('.media-list').find('a[data-parent-activity-id]').each(function() {
+          var parentActivityId = jQuery(this).attr('data-parent-activity-id');
+          if (processedActivityIds.has(parentActivityId)) {
+            return;  
+          }
+          parentActivityIds.push(parentActivityId);
+        });
+      } else if (jQuery('.activity-list').length) {
+      
+        jQuery('.activity-list').find('a[data-parent-activity-id]').each(function() {
+          var parentActivityId = jQuery(this).attr('data-parent-activity-id');
+          if (processedActivityIds.has(parentActivityId)) {
+            // console.log("Processitem has item", parentActivityId)
+            return;  
+          }
+          parentActivityIds.push(parentActivityId);
         });
       }
+      parentActivityIds = [...new Set(parentActivityIds)];
+  
+      if (parentActivityIds.length === 0) {
+      
+        resolve([]);  
+        return;
+      }
+      
+      getContentWarningData(parentActivityIds)
+      .then(function (activities) {
+        ajaxResponse = activities;
+        activities.forEach(function (activity) {
+          appendContentWarningToParent(activity);
+        });
+      })
+      .catch(function (error) {
+        console.error("Error occurred:", error);
+      })
+       
     });
   });
   observer.observe(document.body, { childList: true, subtree: true });
@@ -293,7 +363,5 @@ This is used for content warning widget in Post
         }
       });
     }
-
   }
-
 });
