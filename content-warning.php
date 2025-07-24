@@ -7,6 +7,7 @@
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Author: Jeremy Malcolm
  */
+ 
 
 if (!defined('ABSPATH')) exit; // Exit if accessed directly
 
@@ -29,7 +30,17 @@ function deaddove_register_taxonomy() {
     ]);
 }
 add_action('init', 'deaddove_register_taxonomy');
+// Hook to store the user ID and role when a new term is created or edited
+function store_user_id_and_role_on_term_creation($term_id) {
+    $current_user_id = get_current_user_id();
+    $user = get_user_by('id', $current_user_id);
+    $user_role = isset($user->roles[0]) ? $user->roles[0] : '';
+    update_term_meta($term_id, 'author_user_id', $current_user_id);
+    update_term_meta($term_id, 'author_user_role', $user_role);
+}
 
+add_action('created_term', 'store_user_id_and_role_on_term_creation');
+add_action('edited_term', 'store_user_id_and_role_on_term_creation');
 // Enqueue the JavaScript file for the frontend behavior if needed
 function deaddove_enqueue_modal_script() {
     if (!is_single()) {
@@ -129,7 +140,10 @@ add_action('init', 'deaddove_register_content_warning_block');
 // Render callback for the block
 function deaddove_render_content_warning_block($attributes, $content) {
     
-    $term_ids = $attributes['terms'] ?? [];
+    $term_ids = $attributes['tags'] ?? [];
+    // echo '<pre>';
+    // print_r($attributes);
+    // echo '</pre>';
     // Retrieve user term preferences or default ones.
     $admin_warning_terms = get_option('deaddove_warning_terms', []);
     $user_terms = get_user_meta(get_current_user_id(), 'deaddove_user_warning_terms', true) ?: $admin_warning_terms;
@@ -142,10 +156,12 @@ function deaddove_render_content_warning_block($attributes, $content) {
             $warning_texts[] = $warning_text;
         }
     }
+    // print_r($warning_texts);
+
 
     // If there are no warnings, show content directly.
     if (empty($warning_texts)) {
-        return '<div class="deaddove-block-content">' . $content . '</div>';
+        // return '<div class="deaddove-block-content">' . $content . '</div>';
     }
 
     // Create the warning modal with all warnings displayed.
@@ -181,18 +197,20 @@ function deaddove_content_warning_shortcode($atts, $content = null) {
 
     $atts = shortcode_atts(['tags' => ''], $atts);
     $tags = array_map('trim', explode(',', $atts['tags']));
+     
     $admin_warning_tags = get_option('deaddove_warning_tags', []);
     $user_tags = get_user_meta(get_current_user_id(), 'deaddove_user_warning_tags', true) ?: $admin_warning_tags;
 
     $warning_texts = [];
     foreach ($tags as $tag_slug) {
-        $tag = get_term_by('slug', $tag_slug, 'post_tag');
+        $tag = get_term_by('slug', $tag_slug, 'content_warning');
         if ($tag && in_array($tag_slug, $user_tags)) {
             $warning_text = $tag->description ?: 'This content requires your agreement to view.';
             $warning_texts[] = $warning_text;
         }
     }
-   
+  
+ 
     if (empty($warning_texts)) {
         return do_shortcode($content);
     }
@@ -824,10 +842,8 @@ function deaddove_display_settings_form() {
         return;
     }
     $user_id = get_current_user_id();
-    // $admin_tags = get_option('deaddove_warning_tags', []);
-    // Getting User selected tags from database
     $userSelectedTags = get_user_meta($user_id, 'deaddove_user_warning_tags', true);
-    // $user_tags = $user_tags !== '' ? $user_tags : $admin_tags; 
+    // $adminTags = get_user_meta
     $userSelectedTags = $userSelectedTags !== '' ? $userSelectedTags : []; 
      
     // Getting all content warning tags
@@ -835,9 +851,24 @@ function deaddove_display_settings_form() {
         'taxonomy' => 'content_warning',
         'hide_empty' => false,
     ]);
+    
+    if (empty($userSelectedTags)) {
+        $adminTags = [];
+        foreach ($all_tags as $tag) {
+            // $author_user_id = get_term_meta($tag->term_id, 'author_user_id', true);
+            $author_user_role = get_term_meta($tag->term_id, 'author_user_role', true);
+
+            if ($author_user_role === 'administrator') {
+                $adminTags[] = $tag->slug;
+            }
+        }
+        $userSelectedTags = $adminTags;
+    }
+    
+     
 
     ?>
-    <h3 id="deaddove-warning-settings">Content Warning Settings</h3>
+    <h3 id="deaddove-warning-settings">Content Warning Settings111</h3>
     
     <form id="deaddove-settings-form">
         <?php wp_nonce_field('deaddove_user_profile_nonce', 'deaddove_user_nonce'); ?>
@@ -845,7 +876,9 @@ function deaddove_display_settings_form() {
         <label><strong>Select tags for which a content warning should be shown:</strong></label>
         <div style="margin-top: 10px;">
             <ul class="terms-list">
-            <?php foreach ($all_tags as $tag) : ?>
+            <?php foreach ($all_tags as $tag) : 
+               
+                ?>
                 <li class="term-item">
                 <label style="display: block; margin-bottom: 5px;">
                     <input type="checkbox" name="deaddove_user_tags[]" value="<?php echo esc_attr($tag->slug); ?>"
@@ -869,13 +902,13 @@ function deaddove_display_settings_form() {
             e.preventDefault(); // Prevent form submission
 
             var formData = $(this).serialize(); // Get form data
-
+            // console.log("checking form dataa",formData)
             $.ajax({
                 type: 'POST',
                 url: '<?php echo admin_url("admin-ajax.php"); ?>',
                 data: formData + '&action=deaddove_save_user_settings',
                 beforeSend: function() {
-                    $('#deaddove-save-message').hide(); // Hide message before sending request
+                    $('#deaddove-save-message').hide();  
                 },
                 success: function(response) {
                     $('#deaddove-save-message').show().text(response.message);
@@ -888,7 +921,7 @@ function deaddove_display_settings_form() {
     <?php
 }
 add_action('wp_ajax_deaddove_save_user_settings', 'deaddove_save_user_settings');
-
+ 
 function deaddove_save_user_settings() {
     // Check if user is logged in
     if (!is_user_logged_in()) {

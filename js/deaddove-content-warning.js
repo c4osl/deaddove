@@ -109,7 +109,7 @@ document.addEventListener("DOMContentLoaded", function () {
     event.preventDefault();
     event.stopPropagation();
     const mediaContainer = jQuery(this);
-
+console.log("click functionality:::::::::::::::::::::")
     event.stopImmediatePropagation();
     jQuery(".media-theatre").hide();
     jQuery(".video-theatre").hide();
@@ -134,6 +134,8 @@ document.addEventListener("DOMContentLoaded", function () {
           currentUser.bp_profile_url + "settings/content-warning-settings/"
         );
       } else {
+        let currentUrl = window.location.href
+        console.log("checking curentUrl", currentUrl)
         const redirectTo =
           currentUser && currentUser.bp_profile_url
             ? currentUser.bp_profile_url + "settings/content-warning-settings/"
@@ -141,7 +143,7 @@ document.addEventListener("DOMContentLoaded", function () {
               "/members/me/settings/content-warning-settings/";
         modalLink.attr(
           "href",
-          wpLoginUrl + "?redirect_to=" + encodeURIComponent(redirectTo)
+          currentUrl + "?redirect_to=" + encodeURIComponent(redirectTo)
         );
       }
       descriptionText.text(
@@ -359,7 +361,13 @@ This is used for content warning widget in Post
     if (parentElements.length) {
       parentElements.each(function () {
         if (jQuery(this).attr("data-attachment-id")) {
-          jQuery(this).addClass("deaddove-media-warning");
+          if(jQuery(this).find('.activity-list')){
+            // jQuery(this).addClass("deaddove-media-warning");
+            jQuery(this).closest(".activity-inner").attr("data-parent-activity-id", activity.activity_id).addClass("deaddove-media-warning");
+          }else{
+
+            jQuery(this).addClass("deaddove-media-warning");
+          }
         }
       });
     }
