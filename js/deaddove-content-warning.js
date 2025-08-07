@@ -34,18 +34,23 @@ document.addEventListener("DOMContentLoaded", function () {
         action: "deaddove_content_warning",
         nonce: deaddove_ajax.nonce,
         activities: parentActivityIds,
+        type: "acticityWarning",
       };
       jQuery
         .post(deaddove_ajax.ajaxurl, data, function (response) {
           if (response.success) {
-            response.data.activities.forEach(function(activity) {
-              processedActivityIds.add(activity.activity_id.toString());  
-              
-              if (!allContentWarning.some(item => item.activity_id === activity.activity_id)) {
-                allContentWarning.push(activity);  
+            response.data.activities.forEach(function (activity) {
+              processedActivityIds.add(activity.activity_id.toString());
+
+              if (
+                !allContentWarning.some(
+                  (item) => item.activity_id === activity.activity_id
+                )
+              ) {
+                allContentWarning.push(activity);
               }
             });
-             
+
             resolve(response.data.activities);
           } else {
             reject("Error: " + response.data.message);
@@ -109,7 +114,7 @@ document.addEventListener("DOMContentLoaded", function () {
     event.preventDefault();
     event.stopPropagation();
     const mediaContainer = jQuery(this);
-console.log("click functionality:::::::::::::::::::::")
+    console.log("click functionality:::::::::::::::::::::");
     event.stopImmediatePropagation();
     jQuery(".media-theatre").hide();
     jQuery(".video-theatre").hide();
@@ -126,7 +131,7 @@ console.log("click functionality:::::::::::::::::::::")
       const currentActivity = allContentWarning.find((activity) => {
         return activity.activity_id === Number(postParentId);
       });
-      // console.log("current Description", currentActivity);
+      console.log("current Description", currentActivity);
       // modalLink.attr("href", currentUser !== null ? currentUser.bp_profile_url+'settings/content-warning-settings/' : '#');
       if (currentUser && currentUser.bp_profile_url) {
         modalLink.attr(
@@ -134,8 +139,8 @@ console.log("click functionality:::::::::::::::::::::")
           currentUser.bp_profile_url + "settings/content-warning-settings/"
         );
       } else {
-        let currentUrl = window.location.href
-        console.log("checking curentUrl", currentUrl)
+        let currentUrl = window.location.href;
+        console.log("checking curentUrl", currentUrl);
         const redirectTo =
           currentUser && currentUser.bp_profile_url
             ? currentUser.bp_profile_url + "settings/content-warning-settings/"
@@ -151,7 +156,7 @@ console.log("click functionality:::::::::::::::::::::")
           "This content requires your agreement to view."
       );
       modal.show();
-      showContentButton.on("click", function () {
+      showContentButton.off("click").on("click", function () {
         modal.hide();
         jQuery(".deaddove-modal").hide();
         mediaContainer.removeClass("deaddove-media-warning");
@@ -288,18 +293,18 @@ This is used for content warning widget in Post
       });
     }
   });
-   
+
   getContentWarningData()
-        .then(function (activities) {
-          // Process the response
-          ajaxResponse = activities;
-          activities.forEach(function (activity) {
-            appendContentWarningToParent(activity);
-          });
-        })
-        .catch(function (error) {
-          console.error("Error occurred:", error);
-        })
+    .then(function (activities) {
+      // Process the response
+      ajaxResponse = activities;
+      activities.forEach(function (activity) {
+        appendContentWarningToParent(activity);
+      });
+    })
+    .catch(function (error) {
+      console.error("Error occurred:", error);
+    });
   let observer = new MutationObserver(function (mutations) {
     mutations.forEach(function (mutation) {
       // if (ajaxResponse !== null) {
@@ -307,69 +312,153 @@ This is used for content warning widget in Post
       //     appendContentWarningToParent(activity);
       //   });
       // }
+      let currentUrl = window.location.href;
+      let baseUrl = window.location.origin;
+
       var parentActivityIds = [];
-      if(allContentWarning.length !== 0) {
-      allContentWarning.forEach(function (activity) {
-        appendContentWarningToParent(activity);
-      });
-    }
-      if (jQuery('.media-list').length) {
-        jQuery('.media-list').find('a[data-parent-activity-id]').each(function() {
-          var parentActivityId = jQuery(this).attr('data-parent-activity-id');
-          if (processedActivityIds.has(parentActivityId)) {
-            return;  
-          }
-          parentActivityIds.push(parentActivityId);
-        });
-      } else if (jQuery('.activity-list').length) {
-      
-        jQuery('.activity-list').find('a[data-parent-activity-id]').each(function() {
-          var parentActivityId = jQuery(this).attr('data-parent-activity-id');
-          if (processedActivityIds.has(parentActivityId)) {
-            // console.log("Processitem has item", parentActivityId)
-            return;  
-          }
-          parentActivityIds.push(parentActivityId);
-        });
-      }
-      parentActivityIds = [...new Set(parentActivityIds)];
-  
-      if (parentActivityIds.length === 0) {
-      
-        resolve([]);  
-        return;
-      }
-      
-      getContentWarningData(parentActivityIds)
-      .then(function (activities) {
-        ajaxResponse = activities;
-        activities.forEach(function (activity) {
+
+      if (allContentWarning.length !== 0) {
+        allContentWarning.forEach(function (activity) {
           appendContentWarningToParent(activity);
         });
-      })
-      .catch(function (error) {
-        console.error("Error occurred:", error);
-      })
-       
+      }
+      const urlParts = currentUrl.split("/");
+      if (urlParts.includes("forums") && urlParts.includes("discussion")) {
+        // console.log("inside sjdfl", currentUrl);
+
+      } else {
+        if (jQuery(".media-list").length) {
+          jQuery(".media-list")
+            .find("a[data-parent-activity-id]")
+            .each(function () {
+              var parentActivityId = jQuery(this).attr(
+                "data-parent-activity-id"
+              );
+              if (processedActivityIds.has(parentActivityId)) {
+                return;
+              }
+              parentActivityIds.push(parentActivityId);
+            });
+        } else if (jQuery(".activity-list").length) {
+          // jQuery('.activity-list').find('a[data-parent-activity-id]').each(function() {
+          //   var parentActivityId = jQuery(this).attr('data-parent-activity-id');
+          //   if (processedActivityIds.has(parentActivityId)) {
+          //     // console.log("Processitem has item", parentActivityId)
+          //     return;
+          //   }
+          //   parentActivityIds.push(parentActivityId);
+          // });
+          jQuery(".activity-list")
+            .find("li[data-bp-activity-id]")
+            .each(function () {
+              var parentActivityId = jQuery(this).attr("data-bp-activity-id");
+              if (processedActivityIds.has(parentActivityId)) {
+                // console.log("Processitem has item", parentActivityId)
+                return;
+              }
+              parentActivityIds.push(parentActivityId);
+            });
+        }
+        parentActivityIds = [...new Set(parentActivityIds)];
+        if (parentActivityIds.length === 0) {
+          // resolve([]);
+
+          return parentActivityIds;
+        }
+      }
+      getContentWarningData(parentActivityIds)
+        .then(function (activities) {
+          ajaxResponse = activities;
+          activities.forEach(function (activity) {
+            appendContentWarningToParent(activity);
+          });
+        })
+        .catch(function (error) {
+          console.error("Error occurred:", error);
+        });
     });
   });
   observer.observe(document.body, { childList: true, subtree: true });
   function appendContentWarningToParent(activity) {
+    console.log("checking activity id ", activity.activity_id);
     var parentElements = jQuery(
       '[data-parent-activity-id="' + activity.activity_id + '"]'
     );
-    if (parentElements.length) {
-      parentElements.each(function () {
-        if (jQuery(this).attr("data-attachment-id")) {
-          if(jQuery(this).find('.activity-list')){
-            // jQuery(this).addClass("deaddove-media-warning");
-            jQuery(this).closest(".activity-inner").attr("data-parent-activity-id", activity.activity_id).addClass("deaddove-media-warning");
-          }else{
-
-            jQuery(this).addClass("deaddove-media-warning");
-          }
-        }
+    var OtherElements = jQuery(
+      '[data-bp-activity-id="' + activity.activity_id + '"]'
+    );
+    // console.log("checking target element", parentElements)
+    // console.log("targeting other  element", OtherElements)
+    if (OtherElements.length) {
+      OtherElements.each(function () {
+        jQuery(this)
+          .find(".activity-inner")
+          .addClass("deaddove-media-warning")
+          .attr("data-parent-activity-id", activity.activity_id);
+        // jQuery(this).find('data-parent-activity-id="' + activity.activity_id + '"').addClass("deaddove-media-warning");
+        jQuery(this)
+          .find('[data-parent-activity-id="' + activity.activity_id + '"]')
+          .addClass("deaddove-media-warning");
       });
+    } else {
+      if (parentElements.length) {
+        parentElements.each(function () {
+          if (jQuery(this).attr("data-attachment-id")) {
+            console.log("checking value of this", this);
+            // if(jQuery(this).find('.activity-list')){
+            // console.log("if condtion ")
+            // jQuery(this).addClass("deaddove-media-warning");
+            //   jQuery(this).closest(".activity-inner").attr("data-parent-activity-id", activity.activity_id).addClass("deaddove-media-warning");
+            // }else{
+            // console.log("checking else condition ")
+            jQuery(this).addClass("deaddove-media-warning");
+            // }
+          }
+        });
+      }
     }
   }
+  // dd-forum-warning
+  jQuery(document).ready(async function ($) {
+    jQuery(document).on("click", ".dd-forum-warning", function (event) {
+        event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+     jQuery(".media-theatre").hide();
+    jQuery(".video-theatre").hide();
+       const forumContainer = jQuery(this);
+      const forumTopicId = forumContainer.attr("data-bbp-topic-id");
+      const blurDescription = forumContainer.find('.blur-description').text();
+      console.log("checking forumsId",forumTopicId );
+   
+      jQuery(".deaddove-forums-modal-wrapper").each(function () {
+      const modalWrapper = jQuery(this);
+      const modal = modalWrapper.find(".deaddove-modal");
+      const showContentButton = modalWrapper.find(".deaddove-show-content-btn");
+      const hideContentButton = modalWrapper.find(".deaddove-hide-content-btn");
+      const descriptionText = modalWrapper.find(".description-text");
+      const modalLink = modalWrapper.find(".deaddove-settings-link");
+      descriptionText.text(
+        blurDescription ||
+          "This content requires your agreement to view."
+      );
+      modal.show();
+
+      // showContentButton.on("click", function () {
+      //   modal.hide();
+      //   jQuery(".deaddove-modal").hide();
+      //   const element = jQuery('[data-bbp-topic-id="' + forumTopicId + '"]');
+      //   element.removeClass("dd-forum-warning");
+      // });
+      showContentButton.off("click").on("click", function () {
+      modal.hide();
+      forumContainer.removeClass("dd-forum-warning");
+    });
+      hideContentButton.on("click", function () {
+        modal.hide();
+        jQuery(".deaddove-modal").hide();
+      });
+      })
+    })
+  });
 });

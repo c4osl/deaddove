@@ -868,7 +868,7 @@ function deaddove_display_settings_form() {
      
 
     ?>
-    <h3 id="deaddove-warning-settings">Content Warning Settings111</h3>
+    <h3 id="deaddove-warning-settings">Content Warning Settings</h3>
     
     <form id="deaddove-settings-form">
         <?php wp_nonce_field('deaddove_user_profile_nonce', 'deaddove_user_nonce'); ?>
@@ -1098,6 +1098,7 @@ add_action('wp_enqueue_scripts', 'deaddove_enqueue_scripts');
 Adding content warning field in time line
 */
 function bboss_add_custom_field_to_activity_form() {
+    // die;
     $user_id = get_current_user_id();
     
     $admin_warning_terms = get_option('content_warning', []);
@@ -1109,6 +1110,7 @@ function bboss_add_custom_field_to_activity_form() {
         'taxonomy' => 'content_warning',
         'hide_empty' => false,
     ]);
+    // print_r($terms)
     ?>
     <div class="custom-activity-field" style="margin-top: 10px;">
        <div class="accordion-header1" style="cursor: pointer; font-weight: bold; background: #f1f1f1; padding: 10px; border: 1px solid #ddd;">
@@ -1145,6 +1147,50 @@ function bboss_add_custom_field_to_activity_form() {
 }
 add_action('bp_activity_post_form_options', 'bboss_add_custom_field_to_activity_form');
 
+
+function bboss_add_custom_field_to_forum_form() {
+    $user_id = get_current_user_id();
+
+    $admin_warning_terms = get_option('content_warning', []);
+    $userTerms = get_user_meta($user_id, 'deaddove_user_warning_tags', true) ?: $admin_warning_terms;
+    if (!is_array($userTerms)) {
+        $userTerms = [];
+    }
+
+    $terms = get_terms([
+        'taxonomy' => 'content_warning',
+        'hide_empty' => false,
+    ]);
+
+    ?>
+    <div class="custom-forum-field" style="margin-top: 10px;">
+        <div class="accordion-header1" style="cursor: pointer; font-weight: bold; background: #f1f1f1; padding: 10px; border: 1px solid #ddd;">
+            Content Warnings <span style="float: right;">&#9660;</span>
+        </div>
+        <div class="accordion-content1" style="display: none; padding: 10px; border: 1px solid #ddd; height:200px; overflow-y:auto">
+            <?php foreach ($terms as $term) : ?>
+                <label style="display: block; margin-bottom: 5px;">
+                    <input type="checkbox" name="forum_content_warning_tags[]" value="<?php echo esc_attr($term->term_id); ?>">
+                    <?php echo esc_html($term->name); ?>
+                </label>
+            <?php endforeach; ?>
+        </div>
+    </div>
+
+    <script>
+        jQuery(document).ready(function($) {
+            $(".accordion-header1").click(function () {
+                $(".accordion-content1").slideToggle(300);
+                const icon = $(this).find("span");
+                icon.text(icon.text() === "▼" ? "▲" : "▼");
+            });
+        });
+    </script>
+    <?php
+}
+// add_action('bbp_theme_after_topic_form_content', 'bboss_add_custom_field_to_forum_form');
+add_action('bbp_theme_after_topic_form_content', 'bboss_add_custom_field_to_forum_form');
+add_action('bbp_theme_after_reply_form_content', 'bboss_add_custom_field_to_forum_form');
  
 function bboss_save_custom_activity_field($content, $user_id, $activity_id) {
     if (!isset($_POST['content_warning_tags']) || empty($_POST['content_warning_tags'])) {
@@ -1165,6 +1211,22 @@ function bboss_save_custom_activity_field($content, $user_id, $activity_id) {
     // bp_activity_update_meta($activity_id, 'content_warning_tags', $tags_string);
 }
 add_action('bp_activity_posted_update', 'bboss_save_custom_activity_field', 10, 3);
+
+function save_forum_custom_field($topic_id) {
+    if (isset($_POST['forum_content_warning_tags'])) {
+        $tags = array_map('intval', $_POST['forum_content_warning_tags']);
+        update_post_meta($topic_id, 'forum_content_warning_tags', $tags);
+    }
+}
+add_action('bbp_new_topic', 'save_forum_custom_field');
+
+function save_reply_custom_field($reply_id) {
+    if (isset($_POST['forum_content_warning_tags'])) {
+        $tags = array_map('intval', $_POST['forum_content_warning_tags']);
+        update_post_meta($reply_id, 'forum_content_warning_tags', $tags);
+    }
+}
+add_action('bbp_new_reply', 'save_reply_custom_field');
 
 /* 
 
@@ -1187,6 +1249,8 @@ function deaddove_content_warning_ajax_handler() {
     if( !isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'deaddove_nonce') ) {
         wp_send_json_error(array('message' => 'Invalid nonce'));
     }
+    $warningType = $_POST['type'];
+    // print_r($warningType);
     $args = array(
         'per_page' => 100,  
         'page' => 1, 
@@ -1196,7 +1260,6 @@ function deaddove_content_warning_ajax_handler() {
         $activities = $_POST['activities'];
     }
     else{
-
         $activities = bp_activity_get($args);
     }
     // echo "<pre>";
@@ -1210,7 +1273,12 @@ function deaddove_content_warning_ajax_handler() {
     foreach ($activities as $activity) {
         // $activity_id = $activity->id;
         // echo $activity;
-        $content_warning_tag = bp_activity_get_meta(intval($activity), 'content_warning_tags', true);
+        if($warningType=='acticityWarning'){
+            $content_warning_tag = bp_activity_get_meta(intval($activity), 'content_warning_tags', true);
+        }
+        else{
+            $content_warning_tag = get_post_meta(intval($activity), 'content_warning_tags', true);
+        }
         if ($content_warning_tag) {
             $tag_ids = explode(',', $content_warning_tag); 
             $tag_names = [];
@@ -1305,3 +1373,154 @@ function deaddove_current_user_ajax_handler() {
 }
 add_action('wp_ajax_deaddove_current_user', 'deaddove_current_user_ajax_handler');  
 add_action('wp_ajax_nopriv_deaddove_current_user', 'deaddove_current_user_ajax_handler');
+ 
+add_filter( 'bbp_template_include', 'myplugin_bbp_template_override' );
+
+function myplugin_bbp_template_override( $template ) {
+    
+    $active_theme = wp_get_theme();
+
+   
+    $is_buddyboss = ( $active_theme->get( 'Name' ) === 'BuddyBoss Theme' || $active_theme->get( 'Template' ) === 'buddyboss-theme' );
+
+    if ( ! $is_buddyboss ) {
+        return $template;  
+    }
+
+    $plugin_template_dir = plugin_dir_path( __FILE__ ) . 'templates/bbpress/';
+    $template_filename   = basename( $template );
+    $custom_template     = $plugin_template_dir . $template_filename;
+
+    if ( file_exists( $custom_template ) ) {
+        echo '<!-- Loading plugin template: ' . $custom_template . ' -->';
+        return $custom_template;
+    }
+
+    return $template;
+}
+
+
+
+function dd_get_template_part( $slug, $name = null ) {
+    $plugin_path = plugin_dir_path( __FILE__ ) . 'templates/';
+    $template = '';
+    
+    if ( $name ) {
+        $file = $slug . '-' . $name . '.php';
+        // print_r($file);
+        if ( file_exists( $plugin_path . $file ) ) {
+            
+            $template = $plugin_path . $file;
+        }
+    }
+    
+    // If no named file, check for base slug
+    if ( empty( $template ) ) {
+        $file = $slug . '.php';
+        if ( file_exists( $plugin_path . $file ) ) {
+            $template = $plugin_path . $file;
+        }
+    }
+    
+
+    // Load the file if found
+    
+    if ( ! empty( $template ) ) {
+        echo '<!-- Loading plugin template: ' . $template . ' -->';
+        load_template( $template, false );
+        return;
+    }
+
+    // Fallback to theme
+    get_template_part( $slug, $name );
+}
+ 
+function dd_is_topic_blurred( $topic_id ) {
+    $blurred = false;
+ 
+    if ( ! $topic_id ) {
+        return $blurred;  
+    }
+  
+    $tag_ids = get_post_meta( $topic_id, 'forum_content_warning_tags', true );
+ 
+    if ( ! empty( $tag_ids ) ) {
+        // $tag_ids = explode( ',', $content_warning_tag );
+        foreach ( $tag_ids as $tag_id ) {
+            if ( term_exists( intval( $tag_id ), 'content_warning' ) ) {
+                $blurred = true;
+                break;
+            }
+            // $blurred = true;
+            // break;
+        }
+    }
+    
+    return $blurred;
+}
+// File: wp-content/plugins/my-custom-plugin/my-custom-plugin.php
+
+function dd_custom_bbp_reply_callback( $reply, $args, $depth ) {
+    $GLOBALS['post'] = $reply;
+    setup_postdata( $reply );
+ 
+    ?>
+    <li id="post-<?php bbp_reply_id(); ?>" <?php bbp_reply_class(); ?>>
+        <?php dd_get_template_part( 'template-parts/loop', 'single-reply' ); ?>
+    </li>
+    <?php
+}
+function dd_blurTopic_description( $topic_id ) {
+    $blurredDescription = '';
+
+    if ( ! $topic_id ) {
+        return $blurredDescription;  
+    }
+
+    $tag_ids = get_post_meta( $topic_id, 'forum_content_warning_tags', true );
+
+    if ( empty( $tag_ids ) ) {
+        return $blurredDescription;
+    }
+
+    if ( is_string( $tag_ids ) ) {
+        $tag_ids = explode( ',', $tag_ids );
+    }
+
+    if ( is_array( $tag_ids ) ) {
+        $descriptions = [];
+
+        foreach ( $tag_ids as $tag_id ) {
+            $tag_id = intval( $tag_id );
+            if ( $tag_id && term_exists( $tag_id, 'content_warning' ) ) {
+                $term = get_term( $tag_id, 'content_warning' );
+                if ( ! is_wp_error( $term ) && ! empty( $term->description ) ) {
+                    $descriptions[] = $term->description;
+                }
+            }
+        }
+
+        if ( ! empty( $descriptions ) ) {
+            $blurredDescription = implode( ' | ', $descriptions );
+        }
+    }
+
+    return $blurredDescription;
+}
+add_action( 'bbp_ajax_reply_posted', 'dd_custom_ajax_reply_output', 20, 5 );
+
+// function dd_custom_ajax_reply_output( $reply_id, $topic_id, $forum_id, $anonymous_data, $reply_author ) {
+//     ob_start();
+    
+//     // Load your custom reply template (same as loop-single-reply.php)
+//     bbp_set_query_name( 'bbp_single_reply' ); // Important
+//     bbp_get_template_part( 'loop', 'single-reply' );
+    
+//     $html = ob_get_clean();
+
+//     // Send HTML back to browser
+//     wp_send_json_success( array(
+//         'reply_id' => $reply_id,
+//         'html'     => $html,
+//     ) );
+// }
