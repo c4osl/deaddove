@@ -10,7 +10,6 @@
  
 
 if (!defined('ABSPATH')) exit; // Exit if accessed directly
-
 // Enqueue CSS and JS
 function deaddove_enqueue_assets() {
     wp_enqueue_style('deaddove-style', plugin_dir_url(__FILE__) . 'css/deaddove-style.css');
