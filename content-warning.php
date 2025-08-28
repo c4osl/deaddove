@@ -1146,6 +1146,25 @@ function bboss_add_custom_field_to_activity_form() {
 }
 add_action('bp_activity_post_form_options', 'bboss_add_custom_field_to_activity_form');
 
+function bboss_save_custom_activity_field($content, $user_id, $activity_id) {
+    if (!isset($_POST['content_warning_tags']) || empty($_POST['content_warning_tags'])) {
+        return;
+    }
+
+    $tags = $_POST['content_warning_tags'];
+
+    
+    if (!is_array($tags)) {
+        $tags = array($tags);
+    }
+
+    $selected_tags = array_map('intval', $tags);
+    $tags_string = implode(',', $selected_tags);
+
+    bp_activity_update_meta($activity_id, 'content_warning_tags', $tags_string);
+    // bp_activity_update_meta($activity_id, 'content_warning_tags', $tags_string);
+}
+add_action('bp_activity_posted_update', 'bboss_save_custom_activity_field', 10, 3);
 
 function bboss_add_custom_field_to_forum_form() {
     $user_id = get_current_user_id();
@@ -1178,12 +1197,25 @@ function bboss_add_custom_field_to_forum_form() {
 
     <script>
         jQuery(document).ready(function($) {
+            
             $(".accordion-header1").click(function () {
                 $(".accordion-content1").slideToggle(300);
                 const icon = $(this).find("span");
                 icon.text(icon.text() === "▼" ? "▲" : "▼");
             });
+    //          $(document).on('change', 'input[name="forum_content_warning_tags[]"]', function () {
+    //     let selectedTags = [];
+
+    //     $('input[name="forum_content_warning_tags[]"]:checked').each(function () {
+    //         selectedTags.push($(this).val());
+    //     });
+
+    //     // Show in console
+    //     // console.log("Selected Content Warning Tags:", selectedTags);
+ 
+    // });
         });
+          
     </script>
     <?php
 }
@@ -1191,25 +1223,7 @@ function bboss_add_custom_field_to_forum_form() {
 add_action('bbp_theme_after_topic_form_content', 'bboss_add_custom_field_to_forum_form');
 add_action('bbp_theme_after_reply_form_content', 'bboss_add_custom_field_to_forum_form');
  
-function bboss_save_custom_activity_field($content, $user_id, $activity_id) {
-    if (!isset($_POST['content_warning_tags']) || empty($_POST['content_warning_tags'])) {
-        return;
-    }
 
-    $tags = $_POST['content_warning_tags'];
-
-    
-    if (!is_array($tags)) {
-        $tags = array($tags);
-    }
-
-    $selected_tags = array_map('intval', $tags);
-    $tags_string = implode(',', $selected_tags);
-
-    bp_activity_update_meta($activity_id, 'content_warning_tags', $tags_string);
-    // bp_activity_update_meta($activity_id, 'content_warning_tags', $tags_string);
-}
-add_action('bp_activity_posted_update', 'bboss_save_custom_activity_field', 10, 3);
 
 function save_forum_custom_field($topic_id) {
     if (isset($_POST['forum_content_warning_tags'])) {
