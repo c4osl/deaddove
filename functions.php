@@ -28,7 +28,7 @@ function buddyboss_theme_child_languages()
   // load_theme_textdomain( 'buddyboss-theme-child', get_stylesheet_directory() . '/languages' );
 
 }
-add_action( 'after_setup_theme', 'buddyboss_theme_child_languages' );
+add_action( 'init', 'buddyboss_theme_child_languages' );
 
 /**
  * Enqueues scripts and styles for child theme front-end.
