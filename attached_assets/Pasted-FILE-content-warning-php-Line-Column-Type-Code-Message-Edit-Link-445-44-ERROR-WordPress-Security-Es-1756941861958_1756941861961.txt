@@ -1,0 +1,19 @@
+FILE: content-warning.php
+Line	Column	Type	Code	Message	Edit Link
+445	44	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'admin_url'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+916	34	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'admin_url'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+1023	47	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$url'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+1416	49	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$custom_template'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+1450	49	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$template'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+
+FILE: templates/template-parts/content-single-topic.php
+Line	Column	Type	Code	Message	Edit Link
+80	30	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'bbp_get_topic_favorite_link'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+118	34	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'bbp_get_topic_favorite_link'.
+Learn more (opens in a new tab)
