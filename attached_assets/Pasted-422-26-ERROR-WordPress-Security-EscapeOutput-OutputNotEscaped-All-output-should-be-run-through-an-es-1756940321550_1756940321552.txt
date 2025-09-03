@@ -1,0 +1,18 @@
+422	26	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$args['before_widget']'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+445	44	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'admin_url'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+463	26	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$args['after_widget']'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+598	22	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$args['before_widget']'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+693	22	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$args['after_widget']'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+907	34	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'admin_url'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+1014	47	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$url'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+1408	49	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$custom_template'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+1442	49	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$template'.
+Learn more (opens in a new tab)
