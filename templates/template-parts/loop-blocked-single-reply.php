@@ -72,7 +72,7 @@ $reply_parent_class = $check_hidden_content ? 'bs-reply-suspended-block' : '';
 			/**
 			 * Checked bbp_get_reply_admin_links() is empty or not if links not return then menu dropdown will not show.
 			 */
-			if ( is_user_logged_in() && ! empty( strip_tags( bbp_get_reply_admin_links() ) ) && ! $check_hidden_content ) {
+			if ( is_user_logged_in() && ! empty( wp_strip_all_tags( bbp_get_reply_admin_links() ) ) && ! $check_hidden_content ) {
 				?>
 				<div class="bbp-meta push-right">
 					<div class="more-actions bb-reply-actions bs-dropdown-wrap align-self-center">
