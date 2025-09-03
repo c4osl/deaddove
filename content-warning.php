@@ -465,6 +465,7 @@ class Blur_Featured_Image_Widget extends WP_Widget {
                 }
     }
 }
+}
 
 
 function register_blur_featured_image_widget() {
@@ -711,12 +712,12 @@ function save_user_description() {
     if (!is_user_logged_in()) {
         wp_send_json_error(['message' => 'User not logged in']);
     }
-
+    
     // Add nonce verification
     if (!wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'] ?? '')), 'save_user_description_nonce')) {
         wp_send_json_error(['message' => 'Security check failed']);
     }
-
+    
     $user_id = isset($_POST['user_id']) ? intval($_POST['user_id']) : 0;
     $post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
 
@@ -1019,7 +1020,7 @@ class DeadDove_Widget extends WP_Widget {
                         <button class="deaddove-show-content-btn">Show this content</button>
                         <button class="deaddove-hide-content-btn">Keep it hidden</button>
                     </div>
-                    <small><a href="<?php echo esc_url( $url ); ?>" class="deaddove-settings-link">Modify your content warning settings</a></small>
+                    <small><a href=<?php echo $url;?> class="deaddove-settings-link">Modify your content warning settings</a></small>
                 </div>
             </div>
         </div>
@@ -1324,16 +1325,15 @@ function deaddove_content_warning_ajax_handler() {
     }
     wp_send_json_success(array('activities' => $activity_data));
 }
-}
 add_action('wp_ajax_deaddove_content_warning', 'deaddove_content_warning_ajax_handler');  
-add_action('wp_ajax_nopriv_deaddove_content_warning', 'deaddove_content_warning_ajax_handler');
+add_action('wp_ajax_nopriv_deaddove_content_warning', 'deaddove_content_warning_ajax_handler');  
 
 function get_custom_widget_callback() {
     if ( !isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'deaddove_nonce') ) {
-        wp_send_json_error(array('message' => 'Invalid nonce'));
+        wp_die('Permission Denied');
     }
     if (!is_user_logged_in()) {
-        wp_send_json_error(array('message' => 'User not logged in'));
+        wp_die('Permission Denied');
     }
     $user_id = get_current_user_id();
     // $admin_warning_terms = get_option('content_warning', []);

@@ -77,7 +77,7 @@ if ( bbp_show_lead_topic() ) {
 					<p class="bb-topic-favorite-link-wrap mobile-only">
 						<?php
 						$args = array( 'before' => '' );
-						echo wp_kses_post( bbp_get_topic_favorite_link( $args ) );
+						echo bbp_get_topic_favorite_link( $args );
 						?>
 					</p>
 					<?php
@@ -115,7 +115,7 @@ if ( bbp_show_lead_topic() ) {
 						<p class="bb-topic-favorite-link-wrap">
 							<?php
 							$args = array( 'before' => '' );
-							echo wp_kses_post( bbp_get_topic_favorite_link( $args ) );
+							echo bbp_get_topic_favorite_link( $args );
 							?>
 						</p>
 						<?php
@@ -133,10 +133,7 @@ if ( bbp_show_lead_topic() ) {
 						$from_num = intval( ( $bbp->reply_query->paged - 1 ) * $bbp->reply_query->total_items_per_page ) + 1;
 					}
 
-					$to_num = intval( ( $bbp->reply_query->paged - 1 ) * $bbp->reply_query->total_items_per_page ) + $bbp->reply_query->posts_per_page;
-					if ( $to_num > $bbp->reply_query->found_posts ) {
-						$to_num = $bbp->reply_query->found_posts;
-					}
+					$to_num = intval( $from_num + ( $bbp->reply_query->total_items_per_page - 1 ) > $bbp->reply_query->found_posts ) ? $bbp->reply_query->found_posts : $from_num + ( $bbp->reply_query->total_items_per_page - 1 );
 				} else {
 					$from_num = intval( ( $bbp->reply_query->paged - 1 ) * $bbp->reply_query->posts_per_page ) + 1;
 					$to_num   = intval( $from_num + ( $bbp->reply_query->posts_per_page - 1 ) > $bbp->reply_query->found_posts ) ? $bbp->reply_query->found_posts : $from_num + ( $bbp->reply_query->posts_per_page - 1 );

@@ -35,7 +35,7 @@ $activity_popup_title = sprintf( esc_html__( '%s\'s Post', 'buddyboss' ), bp_cor
 
 ?>
 
-<li class="<?php bp_activity_css_class(); ?>" id="activity-<?php echo esc_attr( $activity_id ); ?>" data-bp-activity-id="<?php echo esc_attr( $activity_id ); ?>" data-bp-timestamp="<?php bp_nouveau_activity_timestamp(); ?>" data-bp-activity="<?php bp_nouveau_edit_activity_data(); ?>" data-link-preview='<?php echo esc_attr( $link_preview_string ); ?>' data-link-url='<?php echo empty( $link_url ) ? '' : esc_url( $link_url ); ?>' data-activity-popup-title='<?php echo empty( $activity_popup_title ) ? '' : esc_attr( $activity_popup_title ); ?>'>
+<li class="<?php bp_activity_css_class(); ?>" id="activity-<?php echo esc_attr( $activity_id ); ?>" data-bp-activity-id="<?php echo esc_attr( $activity_id ); ?>" data-bp-timestamp="<?php bp_nouveau_activity_timestamp(); ?>" data-bp-activity="<?php bp_nouveau_edit_activity_data(); ?>" data-link-preview='<?php echo $link_preview_string; ?>' data-link-url='<?php echo empty( $link_url ) ? '' : esc_url( $link_url ); ?>' data-activity-popup-title='<?php echo empty( $activity_popup_title ) ? '' : esc_attr( $activity_popup_title ); ?>'>
 
 	<?php bb_nouveau_activity_entry_bubble_buttons(); ?>
 
@@ -78,7 +78,7 @@ $activity_popup_title = sprintf( esc_html__( '%s\'s Post', 'buddyboss' ), bp_cor
 				<div class="group-avatar">
 					<a class="group-avatar-wrap mobile-center" href="<?php echo esc_url( $group_permalink ); ?>">
 						<?php
-						echo wp_kses_post( bp_core_fetch_avatar(
+						echo bp_core_fetch_avatar(
 							array(
 								'item_id' => $group->id,
 								'avatar_dir' => 'group-avatars',
@@ -87,7 +87,7 @@ $activity_popup_title = sprintf( esc_html__( '%s\'s Post', 'buddyboss' ), bp_cor
 								'width' => 100,
 								'height' => 100,
 							)
-						) );
+						);
 						?>
 					</a>
 				</div>
@@ -107,8 +107,8 @@ $activity_popup_title = sprintf( esc_html__( '%s\'s Post', 'buddyboss' ), bp_cor
 						$activity_date_recorded = bp_get_activity_date_recorded();
 						printf(
 							'<span class="time-since" data-livestamp="%1$s">%2$s</span>',
-							esc_attr( bp_core_get_iso8601_date( $activity_date_recorded ) ),
-							esc_html( bp_core_time_since( $activity_date_recorded ) )
+							bp_core_get_iso8601_date( $activity_date_recorded ),
+							bp_core_time_since( $activity_date_recorded )
 						);
 						?>
 					</a>
@@ -152,7 +152,7 @@ $activity_popup_title = sprintf( esc_html__( '%s\'s Post', 'buddyboss' ), bp_cor
 			<div class="<?php echo esc_attr( $des !='' ? 'activity-inner activity-content-customTheme dd-forum-warning' : 'activity-inner activity-content-customTheme' ); ?>" data-bbp-topic-id="<?php echo esc_attr( $activity_id ); ?>"><?php bp_nouveau_activity_content(); ?>
 			<?php if($des !=''){
 						?>
-		<p class="blur-description" style="display:none;"><?php echo esc_html( $des ); ?></p>
+		<p class="blur-description" style="display:none;"><?php echo $des; ?></p>
 						<?php
 					} ?>
 		</div>
@@ -185,7 +185,7 @@ $activity_popup_title = sprintf( esc_html__( '%s\'s Post', 'buddyboss' ), bp_cor
 			$class .= bb_is_activity_comment_threading_enabled() ? ' threaded-comments threaded-level-' . bb_get_activity_comment_threading_depth() : '';
 		}
 		?>
-		<div class="<?php echo esc_attr( $class ); ?>">
+		<div class="<?php echo $class ?>">
 			<?php
 			if ( bp_activity_get_comment_count() ) {
 				bp_activity_comments();
