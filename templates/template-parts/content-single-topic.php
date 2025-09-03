@@ -68,7 +68,7 @@ if ( bbp_show_lead_topic() ) {
 				<p class="bb-topic-subscription-link-wrap mobile-only">
 					<?php
 					$args = array( 'before' => '' );
-					echo wp_kses_post( bbp_get_topic_subscription_link( $args ) );
+					echo bbp_get_topic_subscription_link( $args );
 					?>
 				</p>
 				<?php
@@ -106,7 +106,7 @@ if ( bbp_show_lead_topic() ) {
 					<p class="bb-topic-subscription-link-wrap">
 					<?php
 					$args = array( 'before' => '' );
-					echo wp_kses_post( bbp_get_topic_subscription_link( $args ) );
+					echo bbp_get_topic_subscription_link( $args );
 					?>
 					</p>
 					<?php

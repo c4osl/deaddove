@@ -59,7 +59,7 @@ if ( bp_has_activities( bp_ajax_querystring( 'activity' ) ) ) :
 							<button class="deaddove-show-content-btn">Show this content</button>
 							<button class="deaddove-hide-content-btn">Keep it hidden</button>
 						</div>
-						<small><a href="<?php echo esc_url($url) ?>" class="deaddove-settings-link">Modify your content warning settings</a></small>
+						<small><a href="<?php echo $url ?>" class="deaddove-settings-link">Modify your content warning settings</a></small>
 					</div>
 				</div> 
 			</div>

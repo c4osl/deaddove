@@ -33,21 +33,21 @@ $reply_parent_class = $check_hidden_content ? 'bs-reply-suspended-block' : '';
 		)
 	);
 	?>
-	data-date="<?php echo esc_attr( get_post_time( 'F Y', false, bbp_get_reply_id(), true ) ); ?>">
+	data-date="<?php echo get_post_time( 'F Y', false, bbp_get_reply_id(), true ); ?>">
 
 		<?php do_action( 'bbp_theme_before_reply_content' ); ?>
 
 		<div class="flex align-items-center bs-reply-header <?php echo $check_hidden_content ? 'bs-reply-suspended-header' : ''; ?>">
 
 			<div class="bbp-reply-author item-avatar bp-suspended-avatar">
-				<img class="avatar avatar-96 photo avatar-default" src="<?php echo esc_url( get_avatar_url( $reply_author_id, 300 ) ); ?>" />
+				<img class="avatar avatar-96 photo avatar-default" src="<?php echo get_avatar_url( $reply_author_id, 300 ); ?>" />
 			</div><!-- .bbp-reply-author -->
 
 			<div class="item-meta flex-1">
 				<h3>
 					<?php
 						$args = array( 'type' => 'name' );
-						echo wp_kses_post( bbp_get_reply_author_link( $args ) );
+						echo bbp_get_reply_author_link( $args );
 					?>
 				</h3>
 				<?php
@@ -72,7 +72,7 @@ $reply_parent_class = $check_hidden_content ? 'bs-reply-suspended-block' : '';
 			/**
 			 * Checked bbp_get_reply_admin_links() is empty or not if links not return then menu dropdown will not show.
 			 */
-			if ( is_user_logged_in() && ! empty( wp_strip_all_tags( bbp_get_reply_admin_links() ) ) && ! $check_hidden_content ) {
+			if ( is_user_logged_in() && ! empty( strip_tags( bbp_get_reply_admin_links() ) ) && ! $check_hidden_content ) {
 				?>
 				<div class="bbp-meta push-right">
 					<div class="more-actions bb-reply-actions bs-dropdown-wrap align-self-center">
@@ -127,12 +127,12 @@ $reply_parent_class = $check_hidden_content ? 'bs-reply-suspended-block' : '';
 							// If post is a topic, print the topic admin links instead.
 							if ( bbp_is_topic( bbp_get_reply_id() ) ) {
 								add_filter( 'bbp_get_topic_reply_link', 'bb_theme_topic_link_attribute_change', 9999, 3 );
-								echo wp_kses_post( bbp_get_topic_reply_link() );
+								echo bbp_get_topic_reply_link();
 								remove_filter( 'bbp_get_topic_reply_link', 'bb_theme_topic_link_attribute_change', 9999, 3 );
 								// If post is a reply, print the reply admin links instead.
 							} else {
 								add_filter( 'bbp_get_reply_to_link', 'bb_theme_reply_link_attribute_change', 9999, 3 );
-								echo wp_kses_post( bbp_get_reply_to_link() );
+								echo bbp_get_reply_to_link();
 								remove_filter( 'bbp_get_reply_to_link', 'bb_theme_reply_link_attribute_change', 9999, 3 );
 							}
 							if ( ! $empty ) {
@@ -142,8 +142,8 @@ $reply_parent_class = $check_hidden_content ? 'bs-reply-suspended-block' : '';
 									<li>
 										<?php
 										do_action( 'bbp_theme_before_reply_admin_links' );
-										echo wp_kses_post( $topic_links );
-										echo wp_kses_post( $reply_links );
+										echo $topic_links;
+										echo $reply_links;
 										do_action( 'bbp_theme_after_reply_admin_links' );
 										?>
 									</li>

@@ -162,7 +162,7 @@ if($isBlurred){
 												<li>
 													<?php
 													do_action( 'bbp_theme_before_reply_admin_links' );
-													echo wp_kses_post( $topic_links );
+													echo $topic_links;
 													do_action( 'bbp_theme_after_reply_admin_links' );
 													?>
 												</li>
@@ -202,7 +202,7 @@ if($isBlurred){
 					?>
 					<?php if($isBlurred && $tagDescription!=''){
 						?>
-					<p class="blur-description" style="display:none;"><?php echo wp_kses_post( $tagDescription ); ?></p>
+					<p class="blur-description" style="display:none;"><?php echo $tagDescription; ?></p>
 				<?php
 
 				}
@@ -290,10 +290,10 @@ if($isBlurred){
 			<div class="topic-reply-count">
 				<?php
 				if ( bbp_show_lead_topic() ) {
-					echo esc_html( $topic_reply_count );
+					echo $topic_reply_count;
 					$topic_reply_text = 1 !== $topic_reply_count ? esc_html__( 'Replies', 'buddyboss-theme' ) : esc_html__( 'Reply', 'buddyboss-theme' );
 				} else {
-					echo esc_html( $topic_post_count );
+					echo $topic_post_count;
 					$topic_reply_text = 1 !== $topic_post_count ? esc_html__( 'Posts', 'buddyboss-theme' ) : esc_html__( 'Post', 'buddyboss-theme' );
 				}
 				echo ' ' . wp_kses_post( $topic_reply_text );

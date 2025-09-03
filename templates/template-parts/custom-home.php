@@ -78,7 +78,7 @@ bp_nouveau_member_hook( 'before', 'home_content' );
 			<div class="bp-wrap-outer">
 	<?php } ?>
 
-	<div class="bp-wrap <?php echo esc_attr( $user_full_template ); ?>">
+	<div class="bp-wrap <?php echo $user_full_template; ?>">
 		<?php
 		if (
 			! bp_nouveau_is_object_nav_in_sidebar() &&
@@ -93,7 +93,7 @@ bp_nouveau_member_hook( 'before', 'home_content' );
 		}
 		?>
 
-		<div class="bb-profile-grid <?php echo esc_attr( $grid_class ); ?>">
+		<div class="bb-profile-grid <?php echo $grid_class; ?>">
 			<div id="item-body" class="item-body">
 				<div class="item-body-inner111111">
 					<?php bp_nouveau_member_template_part(); ?>
