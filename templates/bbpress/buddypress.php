@@ -21,7 +21,7 @@ if ( ( function_exists( 'bp_is_register_page' ) && bp_is_register_page() ) || ( 
 		echo '<div class="login-split"><div class="login-split__entry">';
 		if ( $admin_login_background_text ) {
 			echo '<h1>';
-			echo wp_kses_post( sprintf( esc_html__( '%s', 'buddyboss-theme' ), $admin_login_background_text ) );
+			echo wp_kses_post( $admin_login_background_text );
 			echo '</h1>';
 		}
 		if ( $admin_login_background_textarea ) {
