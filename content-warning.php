@@ -114,7 +114,7 @@ function deaddove_enqueue_block_editor_assets() {
     wp_enqueue_script(
         'deaddove-block-script',
         plugin_dir_url(__FILE__) . 'js/deaddove-block.js',
-        ['wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components'],
+        ['wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components'],  // Ensure dependencies are correct
         null,
         true
     );
@@ -123,18 +123,16 @@ add_action('enqueue_block_editor_assets', 'deaddove_enqueue_block_editor_assets'
 
 // Register the block
 function deaddove_register_content_warning_block() {
-    if (!wp_block_type_registry()->is_registered('cw/content-warning')) {
-        register_block_type('cw/content-warning', [
-            'editor_script' => 'deaddove-block-script',
-            'render_callback' => 'deaddove_render_content_warning_block',
-            'attributes' => [
-                'terms' => [
-                    'type' => 'array',
-                    'default' => [],
-                ],
+    register_block_type('cw/content-warning', [
+        'editor_script' => 'deaddove-block-script',
+        'render_callback' => 'deaddove_render_content_warning_block',
+        'attributes' => [
+            'terms' => [
+                'type' => 'array', // Changed to 'array' to allow multiple tags
+                'default' => [],
             ],
-        ]);
-    }
+        ],
+    ]);
 }
 add_action('init', 'deaddove_register_content_warning_block');
 
@@ -186,7 +184,12 @@ function deaddove_render_content_warning_block($attributes, $content) {
         </div>';
 }
 
-
+// Register the block with a render callback.
+add_action('init', function () {
+    register_block_type('cw/content-warning', [
+        'render_callback' => 'deaddove_render_content_warning_block',
+    ]);
+});
 
 // Shortcode for custom content warnings
 function deaddove_content_warning_shortcode($atts, $content = null) {
