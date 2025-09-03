@@ -395,8 +395,8 @@ class Blur_Featured_Image_Widget extends WP_Widget {
     public function __construct() {
         parent::__construct(
             'blur_featured_image_widget', // Widget ID
-            __('Blur Featured Image', 'text_domain'), // Widget name
-            array('description' => __('Enable/Disable blur effect for the current post.', 'text_domain'))
+            __('Blur Featured Image', 'deaddove'), // Widget name
+            array('description' => __('Enable/Disable blur effect for the current post.', 'deaddove'))
         );
     }
 
@@ -569,8 +569,8 @@ class Custom_User_Widget extends WP_Widget {
     public function __construct() {
         parent::__construct(
             'custom_user_widget', 
-            __('Custom User Widget', 'text_domain'), 
-            ['description' => __('Add the content warning for description', 'text_domain')]
+            __('Custom User Widget', 'deaddove'), 
+            ['description' => __('Add the content warning for description', 'deaddove')]
         );
     }
     public function form($instance) {
@@ -812,7 +812,7 @@ function deaddove_add_buddyboss_profile_tab() {
     $parent_slug = 'settings';
     $parent_url = bp_loggedin_user_domain() . $parent_slug . '/';
     bp_core_new_subnav_item([
-        'name'            => __('Content Warning Settings', 'textdomain'),
+        'name'            => __('Content Warning Settings', 'deaddove'),
         'slug'            => 'content-warning-settings',
         'parent_slug'     => $parent_slug,
         'parent_url'      => $parent_url,
