@@ -217,7 +217,7 @@ function deaddove_content_warning_shortcode($atts, $content = null) {
 
     $all_warnings = implode('<br><br>', $warning_texts);
 
-    if (strpos($_SERVER['REQUEST_URI'], '/add-new-post') !== false) {
+    if (isset($_SERVER['REQUEST_URI']) && strpos(sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'])), '/add-new-post') !== false) {
         return '<p class="deaddove-block-description" tags="'.$atts['tags'].'">' . $content . '</p><br>';
     }
     return '
@@ -536,18 +536,21 @@ add_action('after_setup_theme', 'disable_block_widgets');
 
 
 function save_blur_featured_image() {
+    // Add nonce verification for AJAX requests
+    if (!wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'] ?? '')), 'save_blur_featured_image_nonce')) {
+        wp_send_json_error("Security check failed");
+    }
+
     if (!isset($_POST['post_id'])) {
         wp_send_json_error("Post ID missing");
     }
 
     $post_id = intval($_POST['post_id']);
 
-    if (isset($_POST['_blured_featured_image']) && $_POST['_blured_featured_image'] == "1") {
-
-        update_post_meta($post_id, '_blured_featured_image', $_POST['_blured_featured_image']);
+    if (isset($_POST['_blured_featured_image']) && sanitize_text_field(wp_unslash($_POST['_blured_featured_image'])) == "1") {
+        update_post_meta($post_id, '_blured_featured_image', 1);
     } else {
         update_post_meta($post_id, '_blured_featured_image', 0);
-
     }
 
     wp_send_json_success("Updated successfully");
@@ -581,7 +584,7 @@ class Custom_User_Widget extends WP_Widget {
         if (is_user_logged_in()) {
             $user_id = get_current_user_id();
 
-            if (strpos($_SERVER['REQUEST_URI'], '/add-new-post') === false) {
+            if (!isset($_SERVER['REQUEST_URI']) || strpos(sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'])), '/add-new-post') === false) {
                 return;
             }
 
@@ -709,11 +712,17 @@ function save_user_description() {
     if (!is_user_logged_in()) {
         wp_send_json_error(['message' => 'User not logged in']);
     }
-    $user_id = $_POST['user_id'];
-    $post_id = $_POST['post_id'];
+    
+    // Add nonce verification
+    if (!wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'] ?? '')), 'save_user_description_nonce')) {
+        wp_send_json_error(['message' => 'Security check failed']);
+    }
+    
+    $user_id = isset($_POST['user_id']) ? intval($_POST['user_id']) : 0;
+    $post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
 
-    $selected_text = sanitize_text_field($_POST['selected_text'] ?? '');
-    $selected_tags = $_POST['tags'] ?? [];
+    $selected_text = isset($_POST['selected_text']) ? sanitize_text_field(wp_unslash($_POST['selected_text'])) : '';
+    $selected_tags = isset($_POST['tags']) ? array_map('sanitize_text_field', wp_unslash($_POST['tags'])) : [];
 
     $post = get_post($post_id);
     if(!$post_id){
@@ -1035,7 +1044,7 @@ function deaddove_get_post_description() {
 
     if (isset($_POST['post_id'])) {
         $post_id = intval($_POST['post_id']); 
-        $tags = $_POST['postTags']; 
+        $tags = isset($_POST['postTags']) ? sanitize_text_field(wp_unslash($_POST['postTags'])) : ''; 
 
         $post = get_post($post_id); 
         if ($post) {
@@ -1147,11 +1156,12 @@ function bboss_add_custom_field_to_activity_form() {
 add_action('bp_activity_post_form_options', 'bboss_add_custom_field_to_activity_form');
 
 function bboss_save_custom_activity_field($content, $user_id, $activity_id) {
+    // BuddyPress handles its own nonce verification for activity posts
     if (!isset($_POST['content_warning_tags']) || empty($_POST['content_warning_tags'])) {
         return;
     }
 
-    $tags = $_POST['content_warning_tags'];
+    $tags = array_map('intval', wp_unslash($_POST['content_warning_tags']));
 
 
     if (!is_array($tags)) {
@@ -1226,16 +1236,18 @@ add_action('bbp_theme_after_reply_form_content', 'bboss_add_custom_field_to_foru
 
 
 function save_forum_custom_field($topic_id) {
+    // bbPress handles its own nonce verification for forum posts
     if (isset($_POST['forum_content_warning_tags'])) {
-        $tags = array_map('intval', $_POST['forum_content_warning_tags']);
+        $tags = array_map('intval', wp_unslash($_POST['forum_content_warning_tags']));
         update_post_meta($topic_id, 'forum_content_warning_tags', $tags);
     }
 }
 add_action('bbp_new_topic', 'save_forum_custom_field');
 
 function save_reply_custom_field($reply_id) {
+    // bbPress handles its own nonce verification for forum replies
     if (isset($_POST['forum_content_warning_tags'])) {
-        $tags = array_map('intval', $_POST['forum_content_warning_tags']);
+        $tags = array_map('intval', wp_unslash($_POST['forum_content_warning_tags']));
         update_post_meta($reply_id, 'forum_content_warning_tags', $tags);
     }
 }
@@ -1256,21 +1268,17 @@ function deaddove_script_before_page_loading() {
 add_action('wp_enqueue_scripts', 'deaddove_script_before_page_loading');
 
 function deaddove_content_warning_ajax_handler() {
-    if( !isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'deaddove_nonce') ) {
+    if( !isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'deaddove_nonce') ) {
         wp_send_json_error(array('message' => 'Invalid nonce'));
     }
-    if( !isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'deaddove_nonce') ) {
-        wp_send_json_error(array('message' => 'Invalid nonce'));
-    }
-    $warningType = $_POST['type'];
+    $warningType = isset($_POST['type']) ? sanitize_text_field(wp_unslash($_POST['type'])) : '';
     // print_r($warningType);
     $args = array(
         'per_page' => 100,  
         'page' => 1, 
     );
     if(isset($_POST['activities']) && !empty($_POST['activities'])){
-        // print_r($_POST['activities']);
-        $activities = $_POST['activities'];
+        $activities = array_map('intval', wp_unslash($_POST['activities']));
     }
     else{
         $activities = bp_activity_get($args);
@@ -1321,7 +1329,7 @@ add_action('wp_ajax_deaddove_content_warning', 'deaddove_content_warning_ajax_ha
 add_action('wp_ajax_nopriv_deaddove_content_warning', 'deaddove_content_warning_ajax_handler');  
 
 function get_custom_widget_callback() {
-    if ( !isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'deaddove_nonce') ) {
+    if ( !isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'deaddove_nonce') ) {
         wp_die('Permission Denied');
     }
     if (!is_user_logged_in()) {
@@ -1355,7 +1363,7 @@ Fetching current user for js link
 */
 
 function deaddove_current_user_ajax_handler() {
-    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'deaddove_nonce')) {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'deaddove_nonce')) {
         wp_send_json_error(array('message' => 'Invalid nonce'));
     }
 
