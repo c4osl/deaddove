@@ -26,7 +26,7 @@ if ( ( function_exists( 'bp_is_register_page' ) && bp_is_register_page() ) || ( 
 		}
 		if ( $admin_login_background_textarea ) {
 			echo '<p>';
-			echo stripslashes( $admin_login_background_textarea );
+			echo wp_kses_post( stripslashes( $admin_login_background_textarea ) );
 			echo '</p>';
 		}
 		echo '</div><div class="split-overlay"></div></div>';
@@ -36,7 +36,7 @@ if ( ( function_exists( 'bp_is_register_page' ) && bp_is_register_page() ) || ( 
 }
 ?>
 
-<div id="primary" class="content-area <?php echo $class_bp_register; ?>">
+<div id="primary" class="content-area <?php echo esc_attr( $class_bp_register ); ?>">
 	<main id="main" class="site-main">
 		<?php
 		if ( function_exists( 'bp_is_register_page' ) && bp_is_register_page() ) {

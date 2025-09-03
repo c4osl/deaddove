@@ -29,7 +29,7 @@ if ( ! function_exists( 'buddyboss_bbpress' ) && 'left' == $sidebar_position ) {
 	if ( bbp_is_forum_archive() && ! $bbpress_banner ) {
 		?>
 		<header class="entry-header">
-			<h1 class="entry-title"><?php echo get_the_title(); ?></h1>
+			<h1 class="entry-title"><?php echo esc_html( get_the_title() ); ?></h1>
 
 			<?php if ( bbp_allow_search() ) : ?>
 				<div id="forums-dir-search" role="search" class="bs-dir-search bs-forums-search">
@@ -73,7 +73,7 @@ if ( ! function_exists( 'buddyboss_bbpress' ) && 'left' == $sidebar_position ) {
 							<button class="deaddove-show-content-btn">Show this content</button>
 							<button class="deaddove-hide-content-btn">Keep it hidden</button>
 						</div>
-						<small><a href="<?php echo $url ?>" class="deaddove-settings-link">Modify your content warning settings</a></small>
+						<small><a href="<?php echo esc_url( $url ); ?>" class="deaddove-settings-link">Modify your content warning settings</a></small>
 					</div>
 				</div> 
 	</div>
