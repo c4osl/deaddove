@@ -34,7 +34,7 @@ $activity_popup_title = sprintf( esc_html__( '%s\'s Post', 'buddyboss' ), bp_cor
 
 ?>
 
-<li class="<?php bp_activity_css_class(); ?>" id="activity-<?php echo esc_attr( $activity_id ); ?>" data-bp-activity-id="<?php echo esc_attr( $activity_id ); ?>" data-bp-timestamp="<?php bp_nouveau_activity_timestamp(); ?>" data-bp-activity="<?php bp_nouveau_edit_activity_data(); ?>" data-link-preview='<?php echo $link_preview_string; ?>' data-link-url='<?php echo empty( $link_url ) ? '' : esc_url( $link_url ); ?>' data-activity-popup-title='<?php echo empty( $activity_popup_title ) ? '' : esc_html( $activity_popup_title ); ?>'>
+<li class="<?php bp_activity_css_class(); ?>" id="activity-<?php echo esc_attr( $activity_id ); ?>" data-bp-activity-id="<?php echo esc_attr( $activity_id ); ?>" data-bp-timestamp="<?php bp_nouveau_activity_timestamp(); ?>" data-bp-activity="<?php bp_nouveau_edit_activity_data(); ?>" data-link-preview='<?php echo $link_preview_string; ?>' data-link-url='<?php echo empty( $link_url ) ? '' : esc_url( $link_url ); ?>' data-activity-popup-title='<?php echo empty( $activity_popup_title ) ? '' : esc_attr( $activity_popup_title ); ?>'>
 
 	<?php bb_nouveau_activity_entry_bubble_buttons(); ?>
 
@@ -75,7 +75,7 @@ $activity_popup_title = sprintf( esc_html__( '%s\'s Post', 'buddyboss' ), bp_cor
 		<div class="bp-activity-head-group">
 			<div class="activity-group-avatar">
 				<div class="group-avatar">
-					<a class="group-avatar-wrap mobile-center" href="<?php echo $group_permalink; ?>">
+					<a class="group-avatar-wrap mobile-center" href="<?php echo esc_url( $group_permalink ); ?>">
 						<?php
 						echo bp_core_fetch_avatar(
 							array(
@@ -91,17 +91,17 @@ $activity_popup_title = sprintf( esc_html__( '%s\'s Post', 'buddyboss' ), bp_cor
 					</a>
 				</div>
 				<div class="author-avatar">
-					<a href="<?php echo $user_link; ?>"><?php bp_activity_avatar( array( 'type' => 'thumb' ) ); ?></a>
+					<a href="<?php echo esc_url( $user_link ); ?>"><?php bp_activity_avatar( array( 'type' => 'thumb' ) ); ?></a>
 				</div>
 			</div>
 
 			<div class="activity-header activity-header--group">
-				<div class="activity-group-heading"><a href="<?php echo $group_permalink; ?>"><?php echo $group_name; ?></a></div>
+				<div class="activity-group-heading"><a href="<?php echo esc_url( $group_permalink ); ?>"><?php echo esc_html( $group_name ); ?></a></div>
 				<div class="activity-group-post-meta">
 					<span class="activity-post-author">
 						<?php bp_activity_action(); ?>
 					</span>
-					<a href="<?php echo $activity_link; ?>">
+					<a href="<?php echo esc_url( $activity_link ); ?>">
 						<?php
 						$activity_date_recorded = bp_get_activity_date_recorded();
 						printf(
@@ -126,7 +126,7 @@ $activity_popup_title = sprintf( esc_html__( '%s\'s Post', 'buddyboss' ), bp_cor
 	<?php else : ?>
 
 		<div class="activity-avatar item-avatar">
-			<a href="<?php echo $user_link; ?>"><?php bp_activity_avatar( array( 'type' => 'full' ) ); ?></a>
+			<a href="<?php echo esc_url( $user_link ); ?>"><?php bp_activity_avatar( array( 'type' => 'full' ) ); ?></a>
 		</div>
 
 		<div class="activity-header">
