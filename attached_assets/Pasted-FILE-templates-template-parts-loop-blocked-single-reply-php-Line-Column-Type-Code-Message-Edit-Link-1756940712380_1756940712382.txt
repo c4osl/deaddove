@@ -1,0 +1,73 @@
+FILE: templates/template-parts/loop-blocked-single-reply.php
+Line	Column	Type	Code	Message	Edit Link
+36	27	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'get_post_time'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+43	84	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'get_avatar_url'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+50	30	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'bbp_get_reply_author_link'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+130	38	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'bbp_get_topic_reply_link'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+135	38	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'bbp_get_reply_to_link'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+145	46	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$topic_links'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+146	46	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$reply_links'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+
+FILE: templates/template-parts/content-single-topic.php
+Line	Column	Type	Code	Message	Edit Link
+71	26	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'bbp_get_topic_subscription_link'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+80	30	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'bbp_get_topic_favorite_link'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+109	26	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'bbp_get_topic_subscription_link'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+118	34	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'bbp_get_topic_favorite_link'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+
+FILE: templates/template-parts/loop-single-reply.php
+Line	Column	Type	Code	Message	Edit Link
+22	31	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'get_post_time'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+28	18	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'bbp_get_reply_author_link'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+34	22	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'bbp_get_reply_author_link'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+115	34	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'bbp_get_topic_reply_link'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+120	34	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found 'bbp_get_reply_to_link'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+133	42	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$topic_links'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+134	42	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$reply_links'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+164	82	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$tagDescription'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+
+FILE: templates/template-parts/content-single-topic-lead.php
+Line	Column	Type	Code	Message	Edit Link
+165	58	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$topic_links'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+205	82	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$tagDescription'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+293	26	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$topic_reply_count'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+296	26	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$topic_post_count'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+
+FILE: templates/template-parts/content-buddypress.php
+Line	Column	Type	Code	Message	Edit Link
+20	33	ERROR	WordPress.Security.EscapeOutput.UnsafePrintingFunction	All output should be run through an escaping function (like esc_html_e() or esc_attr_e()), found '_e'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+20	124	ERROR	WordPress.Security.EscapeOutput.UnsafePrintingFunction	All output should be run through an escaping function (like esc_html_e() or esc_attr_e()), found '_e'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+31	37	ERROR	WordPress.Security.EscapeOutput.UnsafePrintingFunction	All output should be run through an escaping function (like esc_html_e() or esc_attr_e()), found '_e'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+
+FILE: templates/template-parts/custom-home.php
+Line	Column	Type	Code	Message	Edit Link
+81	36	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$user_full_template'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
+96	48	ERROR	WordPress.Security.EscapeOutput.OutputNotEscaped	All output should be run through an escaping function (see the Security sections in the WordPress Developer Handbooks), found '$grid_class'.
+Learn more (opens in a new tab)	View in code editor (opens in a new tab)
