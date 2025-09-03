@@ -1324,6 +1324,7 @@ function deaddove_content_warning_ajax_handler() {
     }
     wp_send_json_success(array('activities' => $activity_data));
 }
+}
 add_action('wp_ajax_deaddove_content_warning', 'deaddove_content_warning_ajax_handler');  
 add_action('wp_ajax_nopriv_deaddove_content_warning', 'deaddove_content_warning_ajax_handler');
 
