@@ -19,19 +19,19 @@ if($isBlurred){
 	'bs-reply-list-item',
 	'scrubberpost',
     'dd-single-reply'
-) ); ?> data-date="<?php echo get_post_time( 'F Y', false, bbp_get_reply_id(), true ); ?>">
+) ); ?> data-date="<?php echo esc_attr( get_post_time( 'F Y', false, bbp_get_reply_id(), true ) ); ?>">
 
     <div class="flex align-items-center bs-reply-header">
 
         <div class="bbp-reply-author item-avatar">
 			<?php $args = array( 'type' => 'avatar' );
-			echo bbp_get_reply_author_link( $args ); ?>
+			echo wp_kses_post( bbp_get_reply_author_link( $args ) ); ?>
         </div><!-- .bbp-reply-author -->
 
         <div class="item-meta flex-1">
             <h3><?php
 				$args = array( 'type' => 'name' );
-				echo bbp_get_reply_author_link( $args );
+				echo wp_kses_post( bbp_get_reply_author_link( $args ) );
 				?></h3>
 
 			<?php bbp_reply_author_role(); ?>
@@ -112,12 +112,12 @@ if($isBlurred){
 						// If post is a topic, print the topic admin links instead.
 						if ( bbp_is_topic( bbp_get_reply_id() ) ) {
 							add_filter( 'bbp_get_topic_reply_link', 'bb_theme_topic_link_attribute_change', 9999, 3 );
-							echo bbp_get_topic_reply_link();
+							echo wp_kses_post( bbp_get_topic_reply_link() );
 							remove_filter( 'bbp_get_topic_reply_link', 'bb_theme_topic_link_attribute_change', 9999, 3 );
 							// If post is a reply, print the reply admin links instead.
 						} else {
 							add_filter( 'bbp_get_reply_to_link', 'bb_theme_reply_link_attribute_change', 9999, 3 );
-							echo bbp_get_reply_to_link();
+							echo wp_kses_post( bbp_get_reply_to_link() );
 							remove_filter( 'bbp_get_reply_to_link', 'bb_theme_reply_link_attribute_change', 9999, 3 );
 						}
 						if ( ! $empty ) {
@@ -130,8 +130,8 @@ if($isBlurred){
 								<li>
 									<?php
 									do_action( 'bbp_theme_before_reply_admin_links' );
-									echo $topic_links;
-									echo $reply_links;
+									echo wp_kses_post( $topic_links );
+									echo wp_kses_post( $reply_links );
 									do_action( 'bbp_theme_after_reply_admin_links' );
 									?>
 								</li>
@@ -161,7 +161,7 @@ if($isBlurred){
 		  -->
 		<?php if($isBlurred && $tagDescription!=''){
 						?>
-					<p class="blur-description" style="display:none;"><?php echo $tagDescription; ?></p>
+					<p class="blur-description" style="display:none;"><?php echo wp_kses_post( $tagDescription ); ?></p>
 				<?php
 
 				}

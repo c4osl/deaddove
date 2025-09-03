@@ -17,7 +17,7 @@
             <?php
             if ( function_exists( 'bp_is_register_page' ) ) {
             	if ( !is_user_logged_in() && bp_is_register_page() && 'request-details' === bp_get_current_signup_step() ) { ?>
-                    <span><?php _e( 'or', 'buddyboss-theme' ); ?> <a href="<?php echo esc_url( wp_login_url() ); ?>"><?php _e( 'Sign in', 'buddyboss-theme' ); ?></a></span>
+                    <span><?php esc_html_e( 'or', 'buddyboss-theme' ); ?> <a href="<?php echo esc_url( wp_login_url() ); ?>"><?php esc_html_e( 'Sign in', 'buddyboss-theme' ); ?></a></span>
                 <?php }
             } ?>
 		</header><!-- .entry-header -->
@@ -28,7 +28,7 @@
 		$vue_components = buddyboss_bp()->get_vue_components();
 		if ( function_exists( 'bp_is_user_notifications' ) && bp_is_user_notifications() && isset( $vue_components['buddyboss_vue_bp_notifications'] ) && ! $vue_components['buddyboss_vue_bp_notifications'] ) {
 			?>
-			<h1 class="title"><?php _e( 'Notifications', 'buddyboss-theme' ); ?></h1><?php
+			<h1 class="title"><?php esc_html_e( 'Notifications', 'buddyboss-theme' ); ?></h1><?php
 		}
 	}
 	?>
