@@ -30,6 +30,7 @@ if ( ! empty( $link_embed ) ) {
 	$link_url = $link_embed;
 }
 
+/* translators: %s: User's display name */
 $activity_popup_title = sprintf( esc_html__( '%s\'s Post', 'buddyboss' ), bp_core_get_user_displayname( bp_get_activity_user_id() ) );
 
 ?>
