@@ -4,6 +4,12 @@
     position: relative;
 }
 
+.deaddove-modal-wrapper.deaddove-inline {
+    display: inline;
+    padding: 0;
+    margin: 0;
+}
+
 .deaddove-modal {
     display: none; /* Hide by default, shown by JavaScript */
     position: fixed;
@@ -22,6 +28,17 @@
     border-radius: 8px;
     text-align: center;
     max-width: 100%;
+}
+
+.deaddove-modal-content .modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.deaddove-modal-content small {
+    display: block;
 }
 
 .deaddove-blur {
