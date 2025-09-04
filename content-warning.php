@@ -198,7 +198,17 @@ function deaddove_content_warning_shortcode($atts, $content = null) {
     $tags = array_map('trim', explode(',', $atts['tags']));
      
     $admin_warning_tags = get_option('deaddove_warning_tags', []);
-    $user_tags = get_user_meta(get_current_user_id(), 'deaddove_user_warning_tags', true) ?: $admin_warning_tags;
+
+    // Retrieve user settings from both BuddyBoss and WordPress profile screens.
+    $bb_tags = get_user_meta(get_current_user_id(), 'deaddove_user_warning_tags', true);
+    $wp_tags = get_user_meta(get_current_user_id(), 'deaddove_user_warning_terms', true);
+
+    // Ensure both values are arrays before merging.
+    $bb_tags = is_array($bb_tags) ? $bb_tags : [];
+    $wp_tags = is_array($wp_tags) ? $wp_tags : [];
+
+    $merged_tags = array_unique(array_merge($bb_tags, $wp_tags));
+    $user_tags = !empty($merged_tags) ? $merged_tags : $admin_warning_tags;
 
     $warning_texts = [];
     foreach ($tags as $tag_slug) {

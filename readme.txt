@@ -40,9 +40,10 @@ Content that has been tagged with a term that triggers a content warning for the
 3. Add a description to each term to provide the warning text.
 
 ### **User Settings**  
-1. Users who have access to the Wordpress Dashboard can go to **Your Profile** to adjust their warning settings.  
+1. Users who have access to the Wordpress Dashboard can go to **Your Profile** to adjust their warning settings.
 2. BuddyBoss users can adjust their warning settings by going to **Account Settings**, **Content Warning Settings**.
-3. Users can disable warnings for certain terms set by the admin or enable warnings for terms that were not set by the admin.
+3. Selections made in either location are merged, so a user with access to both screens sees warnings based on the combined list of terms.
+4. Users can disable warnings for certain terms set by the admin or enable warnings for terms that were not set by the admin.
 
 ### **Post term usage**
 To apply a content warning to an entire post, apply a term that requires a content warning to the post. The content warning taxonomy will appear in the post editor screen, alongside tags, and are used in the same way.
