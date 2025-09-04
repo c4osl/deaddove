@@ -143,9 +143,16 @@ function deaddove_render_content_warning_block($attributes, $content) {
     // echo '<pre>';
     // print_r($attributes);
     // echo '</pre>';
-    // Retrieve user term preferences or default ones.
+    // Retrieve user term and tag preferences or default admin terms.
     $admin_warning_terms = get_option('deaddove_warning_terms', []);
-    $user_terms = get_user_meta(get_current_user_id(), 'deaddove_user_warning_terms', true) ?: $admin_warning_terms;
+    $user_term_prefs = get_user_meta(get_current_user_id(), 'deaddove_user_warning_terms', true);
+    $user_tag_prefs  = get_user_meta(get_current_user_id(), 'deaddove_user_warning_tags', true);
+
+    if (empty($user_term_prefs) && empty($user_tag_prefs)) {
+        $user_terms = $admin_warning_terms;
+    } else {
+        $user_terms = array_unique(array_merge((array) $user_term_prefs, (array) $user_tag_prefs));
+    }
 
     $warning_texts = [];
     foreach ($term_ids as $term_id) {
