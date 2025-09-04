@@ -4,6 +4,12 @@
     position: relative;
 }
 
+.deaddove-modal-wrapper.deaddove-inline {
+    display: inline;
+    padding: 0;
+    margin: 0;
+}
+
 .deaddove-modal {
     display: none; /* Hide by default, shown by JavaScript */
     position: fixed;
