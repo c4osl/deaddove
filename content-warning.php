@@ -78,8 +78,22 @@ function deaddove_filter_content($content) {
 
     $post_terms = wp_get_post_terms(get_the_ID(), 'content_warning', ['fields' => 'slugs']);
     $admin_terms = get_option('deaddove_warning_terms', []);
-    $user_terms = get_user_meta(get_current_user_id(), 'deaddove_warning_terms', true) ?: $admin_terms;
-    $warning_terms = array_intersect($admin_terms, $user_terms, $post_terms);
+
+    // Merge user-selected term and tag preferences. If both are empty,
+    // fall back to the admin-defined defaults stored in the option above.
+    $user_terms = get_user_meta(get_current_user_id(), 'deaddove_user_warning_terms', true);
+    $user_tags  = get_user_meta(get_current_user_id(), 'deaddove_user_warning_tags', true);
+    $user_selections = array_unique(array_merge(
+        is_array($user_terms) ? $user_terms : [],
+        is_array($user_tags) ? $user_tags : []
+    ));
+
+    if (empty($user_selections)) {
+        $user_selections = $admin_terms; // Use admin defaults when no user preference exists.
+    }
+
+    // Only warn for terms selected by both the admin and the user and present on this post.
+    $warning_terms = array_intersect($admin_terms, $user_selections, $post_terms);
 
     if (empty($warning_terms)) return $content;
 
