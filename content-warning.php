@@ -907,28 +907,11 @@ function deaddove_display_settings_form() {
                 url: '<?php echo admin_url("admin-ajax.php"); ?>',
                 data: formData + '&action=deaddove_save_user_settings',
                 beforeSend: function() {
-                    $('#deaddove-save-message').hide();
+                    $('#deaddove-save-message').hide();  
                 },
                 success: function(response) {
-                    var message = response && response.data && response.data.message
-                        ? response.data.message
-                        : 'An unexpected error occurred.';
-                    if (response && response.success) {
-                        $('#deaddove-save-message').css('color', 'green').show().text(message);
-                        location.reload();
-                    } else {
-                        $('#deaddove-save-message').css('color', 'red').show().text(message);
-                    }
-                },
-                error: function(jqXHR, textStatus, errorThrown) {
-                    var errorMsg = 'Request failed: ' + (
-                        jqXHR.responseJSON &&
-                        jqXHR.responseJSON.data &&
-                        jqXHR.responseJSON.data.message
-                            ? jqXHR.responseJSON.data.message
-                            : errorThrown
-                    );
-                    $('#deaddove-save-message').css('color', 'red').show().text(errorMsg);
+                    $('#deaddove-save-message').show().text(response.message);
+                    location.reload();
                 }
             });
         });
