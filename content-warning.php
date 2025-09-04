@@ -216,26 +216,37 @@ function deaddove_content_warning_shortcode($atts, $content = null) {
       
 
     $all_warnings = implode('<br><br>', $warning_texts);
-     
+
     if (strpos($_SERVER['REQUEST_URI'], '/add-new-post') !== false) {
-        return '<p class="deaddove-block-description" tags="'.$atts['tags'].'">' . $content . '</p><br>';
+        return '<p class="deaddove-block-description" tags="' . $atts['tags'] . '">' . $content . '</p><br>';
     }
-    return '
-        <div class="deaddove-modal-wrapper">
-            <div class="deaddove-modal" style="display:none;">
-                <div class="deaddove-modal-content">
-                    <p>' . $all_warnings . '</p>
-                    <div class="modal-buttons">
-                        <button class="deaddove-show-content-btn">Show this content</button>
-                        <button class="deaddove-hide-content-btn">Keep it hidden</button>
-                    </div>
-                    <small><a href="#deaddove-warning-settings3" class="deaddove-settings-link">Modify your content warning settings</a></small>
-                </div>
-            </div>
-            <div class="deaddove-blurred-content deaddove-blur">
-                ' . do_shortcode($content) . '
-            </div>
-        </div>';
+
+    // Determine if the shortcode is used inline (no block-level tags)
+    $inline = !preg_match('/<\s*(div|p|ul|ol|li|h[1-6]|blockquote|pre|table|figure)/i', $content);
+
+    $wrapper_tag = $inline ? 'span' : 'div';
+    $blurred_tag = $wrapper_tag;
+    $warning_tag = $inline ? 'span' : 'p';
+    $modal_tag = $inline ? 'span' : 'div';
+    $modal_content_tag = $inline ? 'span' : 'div';
+    $buttons_tag = $inline ? 'span' : 'div';
+    $wrapper_class = 'deaddove-modal-wrapper' . ($inline ? ' deaddove-inline' : '');
+
+    return '<' . $wrapper_tag . ' class="' . $wrapper_class . '">' .
+                '<' . $modal_tag . ' class="deaddove-modal" style="display:none;">' .
+                    '<' . $modal_content_tag . ' class="deaddove-modal-content">' .
+                        '<' . $warning_tag . '>' . $all_warnings . '</' . $warning_tag . '>' .
+                        '<' . $buttons_tag . ' class="modal-buttons">' .
+                            '<button class="deaddove-show-content-btn">Show this content</button>' .
+                            '<button class="deaddove-hide-content-btn">Keep it hidden</button>' .
+                        '</' . $buttons_tag . '>' .
+                        '<small><a href="#deaddove-warning-settings3" class="deaddove-settings-link">Modify your content warning settings</a></small>' .
+                    '</' . $modal_content_tag . '>' .
+                '</' . $modal_tag . '>' .
+                '<' . $blurred_tag . ' class="deaddove-blurred-content deaddove-blur">' .
+                    do_shortcode($content) .
+                '</' . $blurred_tag . '>' .
+            '</' . $wrapper_tag . '>';
 }
 add_shortcode('content_warning', 'deaddove_content_warning_shortcode');  
 
