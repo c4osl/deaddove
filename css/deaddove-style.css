@@ -4,6 +4,24 @@
     position: relative;
 }
 
+.deaddove-inline-wrapper {
+    padding: 0;
+    margin: 0;
+    display: inline;
+}
+
+.deaddove-inline-wrapper .deaddove-modal-content,
+.deaddove-inline-wrapper .deaddove-modal-text,
+.deaddove-inline-wrapper .modal-buttons,
+.deaddove-inline-wrapper .deaddove-modal-content > small {
+    display: block;
+}
+
+.deaddove-inline-wrapper .deaddove-modal-text,
+.deaddove-inline-wrapper .modal-buttons {
+    margin: 0 0 1em;
+}
+
 .deaddove-modal {
     display: none; /* Hide by default, shown by JavaScript */
     position: fixed;
