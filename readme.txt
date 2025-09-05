@@ -93,6 +93,10 @@ A: Yes, you can.
 
 == Changelog ==
 
+### Version 2.1
+- Simplified code to ensure user settings stored in only one place.
+- Improved visual display of blurred content in-line in a text block.
+
 ### Version 2.0
 - Supports content warnings in BuddyBoss Activity and Forum posts.
 - New BuddyBoss Content Warning Settings screen.
