@@ -223,7 +223,10 @@ function deaddove_content_warning_shortcode($atts, $content = null) {
     if (strpos($_SERVER['REQUEST_URI'], '/add-new-post') !== false) {
         return '<p class="deaddove-block-description" tags="'.$atts['tags'].'">' . $content . '</p><br>';
     }
-    return '
+    $has_block_content = preg_match('/<\s*(div|p|h[1-6]|ul|ol|li|table|blockquote|pre|figure|section|article)/i', $content);
+
+    if ($has_block_content) {
+        return '
         <div class="deaddove-modal-wrapper">
             <div class="deaddove-modal" style="display:none;">
                 <div class="deaddove-modal-content">
@@ -239,8 +242,26 @@ function deaddove_content_warning_shortcode($atts, $content = null) {
                 ' . do_shortcode($content) . '
             </div>
         </div>';
+    }
+
+    return '
+        <span class="deaddove-modal-wrapper deaddove-inline-wrapper">
+            <span class="deaddove-modal" style="display:none;">
+                <span class="deaddove-modal-content">
+                    <span>' . $all_warnings . '</span>
+                    <span class="modal-buttons">
+                        <button class="deaddove-show-content-btn">Show this content</button>
+                        <button class="deaddove-hide-content-btn">Keep it hidden</button>
+                    </span>
+                    <small><a href="#deaddove-warning-settings3" class="deaddove-settings-link">Modify your content warning settings</a></small>
+                </span>
+            </span>
+            <span class="deaddove-blurred-content deaddove-blur">
+                ' . do_shortcode($content) . '
+            </span>
+        </span>';
 }
-add_shortcode('content_warning', 'deaddove_content_warning_shortcode');  
+add_shortcode('content_warning', 'deaddove_content_warning_shortcode');
 
 // Admin settings page
 function deaddove_settings_page() {
