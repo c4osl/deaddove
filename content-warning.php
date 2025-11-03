@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Dead Dove
  * Description: Content warning plugin that blurs content until the user accepts a disclaimer.
- * Version: 2.1
+ * Version: 2.2.0
  * License: GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Author: Center for Online Safety and Liberty
@@ -31,6 +31,68 @@ function deaddove_register_taxonomy() {
     ]);
 }
 add_action('init', 'deaddove_register_taxonomy');
+
+// Add plugin menu page
+if( !function_exists('c0sl_deaddove_menu_page') ){
+	function c0sl_deaddove_menu_page() {
+		add_submenu_page(
+			'tools.php',
+			'Dead Dove Settings',
+			'Dead Dove',
+			'manage_options',
+			'c0sl_deaddove_plugin_settings',
+			'c0sl_deaddove_render_page'
+		);
+	}
+}
+add_action('admin_menu', 'c0sl_deaddove_menu_page');
+
+// Function to display the settings page
+if( !function_exists('c0sl_deaddove_render_page') ){
+	function c0sl_deaddove_render_page() {
+	    ?>
+	    <div id="c0sl-deaddove-container" class="wrap">
+            <h1>Dead Dove Settings</h1>
+            <?php settings_errors(); ?>
+
+            <form method="post" action="options.php">
+                <?php
+                	settings_fields('c0sl_deaddove_plugin_settings_group');
+                	do_settings_sections('c0sl_deaddove_plugin_settings');
+                	submit_button('Save Settings');
+                ?>
+            </form>
+
+        </div>
+	    <?php
+	}
+}
+
+function c0sl_deaddove_plugin_settings_init() {
+    add_settings_section('c0sl_deaddove_plugin_section', 'Plugin Settings', '__return_empty_string', 'c0sl_deaddove_plugin_settings');
+    add_settings_field('c0sl_deaddove_integration_keys', 'Blur Amount', 'c0sl_deaddove_integration_keys_callback', 'c0sl_deaddove_plugin_settings', 'c0sl_deaddove_plugin_section');
+    register_setting('c0sl_deaddove_plugin_settings_group', 'c0sl_deaddove_blur_amount', 'sanitize_text_field');
+}
+add_action('admin_init', 'c0sl_deaddove_plugin_settings_init');
+
+function c0sl_deaddove_integration_keys_callback() {
+    $c0sl_blur_amount = get_option('c0sl_deaddove_blur_amount', 8);
+
+    ?>
+    <label for="c0sl_deaddove_blur_amount">Input a number between 1 and 10 for how strong you want the content to be blurred</label>
+    <br>
+    <input id="c0sl_deaddove_blur_amount" class="c0sl-input" type="number" min="1" max="10" name="c0sl_deaddove_blur_amount" value="<?php echo esc_attr($c0sl_blur_amount); ?>" required />
+    <?php
+}
+
+$blur_amount = get_option('c0sl_deaddove_blur_amount', 8);
+$custom_css = "
+    .deaddove-blurred-content.deaddove-blur {
+        filter: blur({$blur_amount}px);
+    }
+";
+wp_add_inline_style('deaddove-style', $custom_css);
+
 // Hook to store the user ID and role when a new term is created or edited
 function store_user_id_and_role_on_term_creation($term_id) {
     $current_user_id = get_current_user_id();
