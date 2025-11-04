@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Dead Dove
  * Description: Content warning plugin that blurs content until the user accepts a disclaimer.
- * Version: 2.1
+ * Version: 2.2.0
  * License: GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Author: Center for Online Safety and Liberty
@@ -16,6 +16,14 @@ if (!defined('ABSPATH')) exit; // Exit if accessed directly
 function deaddove_enqueue_assets() {
     wp_enqueue_style('deaddove-style', plugin_dir_url(__FILE__) . 'css/deaddove-style.css');
     wp_enqueue_script('deaddove-script', plugin_dir_url(__FILE__) . 'js/deaddove-script.js', ['jquery'], null, true);
+
+    $blur_amount = get_option('deaddove_blur_amount', 8);
+    $custom_css = "
+        .deaddove-blurred-content.deaddove-blur {
+            filter: blur({$blur_amount}px);
+        }
+    ";
+    wp_add_inline_style('deaddove-style', $custom_css);
 }
 add_action('wp_enqueue_scripts', 'deaddove_enqueue_assets');
 
@@ -31,6 +39,7 @@ function deaddove_register_taxonomy() {
     ]);
 }
 add_action('init', 'deaddove_register_taxonomy');
+
 // Hook to store the user ID and role when a new term is created or edited
 function store_user_id_and_role_on_term_creation($term_id) {
     $current_user_id = get_current_user_id();
@@ -289,24 +298,30 @@ function deaddove_settings_page_html() {
 
         // Save the selected terms
         $selected_terms = isset($_POST['deaddove_terms']) 
-            ? array_map('sanitize_text_field', wp_unslash($_POST['deaddove_terms'])) 
-            : [];
+        ? array_map('sanitize_text_field', wp_unslash($_POST['deaddove_terms'])) 
+        : [];
+        $blur_amount = isset($_POST['deaddove_blur_amount']) ? intval(wp_unslash($_POST['deaddove_blur_amount'])) : 8;
+
         update_option('deaddove_warning_terms', $selected_terms);
+        update_option('deaddove_blur_amount', $blur_amount);
 
         // Reload the updated terms to reflect changes immediately
         $selected_terms = get_option('deaddove_warning_terms', []);
+        $blur_amount = get_option('deaddove_blur_amount', 8);
         echo '<div class="updated"><p>Settings saved!</p></div>';
     } else {
         // Load selected terms for the first time when the form is displayed
         $selected_terms = get_option('deaddove_warning_terms', []);
+        $blur_amount = get_option('deaddove_blur_amount', 8);
     }
 
     $all_terms = get_terms([
         'taxonomy' => 'content_warning',
         'hide_empty' => false, // Include unused terms
     ]);
+
     ?>
-    <div class="wrap">
+    <div class="wrap wp-core-ui">
     <h1>Dead Dove Settings</h1>
     <form method="post" action="">
         <?php wp_nonce_field('deaddove_save_settings_nonce', 'deaddove_nonce'); ?>
@@ -321,7 +336,12 @@ function deaddove_settings_page_html() {
             <?php endforeach; ?>
         </div>
         <p>Each term's description will be used as the warning text.</p>
-        <input type="submit" name="deaddove_save_settings" value="Save Settings">
+        <label for="c0sl_deaddove_blur_amount">Input a number between 1 and 10 for how strong you want the content to be blurred:</label>
+        <br>
+        <input id="c0sl_deaddove_blur_amount" class="c0sl-input" type="number" min="1" max="10" name="deaddove_blur_amount" value="<?php echo esc_attr($blur_amount); ?>" required />
+        <br>
+        <br>
+        <input class="button button-primary" type="submit" name="deaddove_save_settings" value="Save Settings">
     </form>
     </div>
     <?php
