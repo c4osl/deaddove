@@ -150,7 +150,7 @@ add_action('init', 'deaddove_register_content_warning_block');
 
 // Render callback for the block
 function deaddove_render_content_warning_block($attributes, $content) {
-    
+
     $term_ids = $attributes['tags'] ?? [];
     // echo '<pre>';
     // print_r($attributes);
@@ -158,6 +158,7 @@ function deaddove_render_content_warning_block($attributes, $content) {
     // Retrieve user term preferences or default ones.
     $admin_warning_terms = get_option('deaddove_warning_terms', []);
     $user_terms = get_user_meta(get_current_user_id(), 'deaddove_user_warning_terms', true) ?: $admin_warning_terms;
+    $blur_text = get_option('deaddove_blur_text', '');
 
     $warning_texts = [];
     foreach ($term_ids as $term_id) {
@@ -177,6 +178,7 @@ function deaddove_render_content_warning_block($attributes, $content) {
 
     // Create the warning modal with all warnings displayed.
     $all_warnings = implode('<br><br>', $warning_texts);
+    $overlay = !empty($blur_text) ? '<div class="deaddove-blur-overlay">' . esc_html($blur_text) . '</div>' : '';
 
     return '
         <div class="deaddove-modal-wrapper">
@@ -193,6 +195,7 @@ function deaddove_render_content_warning_block($attributes, $content) {
             <div class="deaddove-blurred-content deaddove-blur">
                 ' . $content . ' <!-- Render nested blocks here -->
             </div>
+            ' . $overlay . '
         </div>';
 }
 
@@ -208,9 +211,11 @@ function deaddove_content_warning_shortcode($atts, $content = null) {
 
     $atts = shortcode_atts(['tags' => ''], $atts);
     $tags = array_map('trim', explode(',', $atts['tags']));
-     
+
     $admin_warning_terms = get_option('deaddove_warning_terms', []);
     $user_terms = get_user_meta(get_current_user_id(), 'deaddove_user_warning_terms', true) ?: $admin_warning_terms;
+    $blur_text = get_option('deaddove_blur_text', '');
+    $overlay = !empty($blur_text) ? '<div class="deaddove-blur-overlay">' . esc_html($blur_text) . '</div>' : '';
 
     $warning_texts = [];
     foreach ($tags as $tag_slug) {
@@ -220,15 +225,13 @@ function deaddove_content_warning_shortcode($atts, $content = null) {
             $warning_texts[] = $warning_text;
         }
     }
-  
- 
+
     if (empty($warning_texts)) {
         return do_shortcode($content);
     }
-      
 
     $all_warnings = implode('<br><br>', $warning_texts);
-     
+
     if (strpos($_SERVER['REQUEST_URI'], '/add-new-post') !== false) {
         return '<p class="deaddove-block-description" tags="'.$atts['tags'].'">' . $content . '</p><br>';
     }
@@ -250,6 +253,7 @@ function deaddove_content_warning_shortcode($atts, $content = null) {
             <div class="deaddove-blurred-content deaddove-blur">
                 ' . do_shortcode($content) . '
             </div>
+            ' . $overlay . '
         </div>';
     }
 
@@ -268,6 +272,7 @@ function deaddove_content_warning_shortcode($atts, $content = null) {
             <span class="deaddove-blurred-content deaddove-blur">
                 ' . do_shortcode($content) . '
             </span>
+            ' . (!empty($blur_text) ? '<span class="deaddove-blur-overlay">' . esc_html($blur_text) . '</span>' : '') . '
         </span>';
 }
 add_shortcode('content_warning', 'deaddove_content_warning_shortcode');
@@ -275,10 +280,10 @@ add_shortcode('content_warning', 'deaddove_content_warning_shortcode');
 // Admin settings page
 function deaddove_settings_page() {
     add_options_page(
-        'Dead Dove Settings', 
-        'Content Warning', 
-        'manage_options', 
-        'content-warning-settings', 
+        'Dead Dove Settings',
+        'Content Warning',
+        'manage_options',
+        'content-warning-settings',
         'deaddove_settings_page_html'
     );
 }
@@ -297,22 +302,26 @@ function deaddove_settings_page_html() {
         }
 
         // Save the selected terms
-        $selected_terms = isset($_POST['deaddove_terms']) 
-        ? array_map('sanitize_text_field', wp_unslash($_POST['deaddove_terms'])) 
+        $selected_terms = isset($_POST['deaddove_terms'])
+        ? array_map('sanitize_text_field', wp_unslash($_POST['deaddove_terms']))
         : [];
         $blur_amount = isset($_POST['deaddove_blur_amount']) ? intval(wp_unslash($_POST['deaddove_blur_amount'])) : 8;
+        $blur_text = isset($_POST['deaddove_blur_text']) ? sanitize_text_field(wp_unslash($_POST['deaddove_blur_text'])) : '';
 
         update_option('deaddove_warning_terms', $selected_terms);
         update_option('deaddove_blur_amount', $blur_amount);
+        update_option('deaddove_blur_text', $blur_text);
 
         // Reload the updated terms to reflect changes immediately
         $selected_terms = get_option('deaddove_warning_terms', []);
         $blur_amount = get_option('deaddove_blur_amount', 8);
+        $blur_text = get_option('deaddove_blur_text', '');
         echo '<div class="updated"><p>Settings saved!</p></div>';
     } else {
         // Load selected terms for the first time when the form is displayed
         $selected_terms = get_option('deaddove_warning_terms', []);
         $blur_amount = get_option('deaddove_blur_amount', 8);
+        $blur_text = get_option('deaddove_blur_text', '');
     }
 
     $all_terms = get_terms([
@@ -339,6 +348,11 @@ function deaddove_settings_page_html() {
         <label for="c0sl_deaddove_blur_amount">Input a number between 1 and 10 for how strong you want the content to be blurred:</label>
         <br>
         <input id="c0sl_deaddove_blur_amount" class="c0sl-input" type="number" min="1" max="10" name="deaddove_blur_amount" value="<?php echo esc_attr($blur_amount); ?>" required />
+        <br>
+        <br>
+        <label for="c0sl_deaddove_blur_text">Add helper text to blurred content (leave blank for no text next to blurred content):</label>
+        <br>
+        <input id="c0sl_deaddove_blur_text" class="c0sl-input" type="text" name="deaddove_blur_text" placeholder="e.g. Sensitive content. Click blur for more options" style="min-width: 400px;" value="<?php echo esc_attr($blur_text); ?>" />
         <br>
         <br>
         <input class="button button-primary" type="submit" name="deaddove_save_settings" value="Save Settings">
@@ -412,10 +426,10 @@ function deaddove_display_meta_box($post) {
             Blured Featured Image
         </label>
     </p>
-  
+
     <?php
 }
- 
+
  /* 
     save to custom field image blured  
 */
@@ -467,7 +481,7 @@ class Blur_Featured_Image_Widget extends WP_Widget {
                     ?>
                     <form id="blur-featured-image-form">
                         <input type="hidden" name="post_id" value="<?php echo esc_attr($post_id); ?>">
-                        
+
                         <p>
                             <input type="checkbox" id="blur_featured_image_widget" name="_blured_featured_image" value="1" 
                                 <?php checked($blur_enabled, 1); ?>>
@@ -524,29 +538,29 @@ Apply blur effect if enabled
 */
 add_filter('post_thumbnail_html', 'apply_blur_if_enabled', 10, 3);
 function apply_blur_if_enabled($attr, $attachment, $size) {
-   
+
     if (is_single()) {
         $post_id = get_the_ID();
         $blur_enabled = get_post_meta($post_id, '_blured_featured_image', true);
-        
+
         $tags = get_the_tags($post_id);
- 
+
         $warning_texts = [];
-    
+
         if ($tags) {
             foreach ($tags as $tag) {
                 if (!empty($tag->description)) {
-                     
+
                     $warning_texts[] = esc_html($tag->description);
                 } else {
-              
+
                     $warning_texts[] = 'This content requires your agreement to view.';
                 }
             }
         }else{
             $warning_texts[] = 'This content requires your agreement to view.';
         }
-    
+
         $all_warnings = implode('<br><br>', $warning_texts);   
         if ($blur_enabled) {
             return '
@@ -564,9 +578,9 @@ function apply_blur_if_enabled($attr, $attachment, $size) {
                 <div class="deaddove-blurred-content deaddove-blur">' . $attr    . '</div>
             </div>  
                 ';
-           
+
         }
-        
+
     }
     return $attr;
 }
@@ -587,11 +601,11 @@ function save_blur_featured_image() {
     $post_id = intval($_POST['post_id']);
 
     if (isset($_POST['_blured_featured_image']) && $_POST['_blured_featured_image'] == "1") {
-        
+
         update_post_meta($post_id, '_blured_featured_image', $_POST['_blured_featured_image']);
     } else {
         update_post_meta($post_id, '_blured_featured_image', 0);
-       
+
     }
 
     wp_send_json_success("Updated successfully");
@@ -603,7 +617,7 @@ add_action('wp_ajax_nopriv_save_blur_featured_image', 'save_blur_featured_image'
 
 
 
- 
+
 
  /* 
  ************** Update Description Widget ******************* it should remove 
@@ -621,22 +635,22 @@ class Custom_User_Widget extends WP_Widget {
         echo "<p>This widget allows users to blur the featured image for individual posts.</p>";
     }
     public function widget($args, $instance) {
-      
+
         if (is_user_logged_in()) {
             $user_id = get_current_user_id();
-          
+
             if (strpos($_SERVER['REQUEST_URI'], '/add-new-post') === false) {
                 return;
             }
-       
+
             $admin_warning_tags = get_option('content_warning', []);
             $user_tags = get_user_meta($user_id, 'content_warning', true) ?: $admin_warning_tags;
-          
+
             $post_author_id = get_post_field('post_author', $post_id);
-             
+
             // if ($user_id == $post_author_id) {
                 $post_description = isset($post) ? esc_textarea($post->post_content) : '';
-                
+
                 global $post;
                 $post_description = isset($post) ? esc_textarea($post->post_content) : '';
                 echo $args['before_widget'];
