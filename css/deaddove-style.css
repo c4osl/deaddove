@@ -45,6 +45,15 @@
 .deaddove-blur {
     filter: blur(8px);
 }
+
+.deaddove-blur-overlay {
+    background-color: black;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 8px;
+    width: fit-content;
+}
+
 .widget.widget_custom_user_widget{
     display: none;
     position: absolute;
