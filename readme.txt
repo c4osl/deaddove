@@ -4,7 +4,7 @@ Donate link: https://c4osl.org/support-us/
 Tags: content warning, sensitive content, shortcode, tags  
 Requires at least: 5.0  
 Tested up to: 6.8
-Stable tag: 2.1
+Stable tag: 2.3
 Requires PHP: 7.2  
 License: GPLv2 or later  
 License URI: https://www.gnu.org/licenses/gpl-2.0.html  
@@ -92,6 +92,12 @@ A: Yes, you can.
 6. [BuddyBoss Activity screen]![screenshot-6](assets/screenshot-6.png) 
 
 == Changelog ==
+
+### Version 2.3
+- Added setting for text overlay on top of the blurred content.
+
+### Version 2.2
+- Added admin setting to configure the amount of blur.
 
 ### Version 2.1
 - Simplified code to ensure user settings stored in only one place.
