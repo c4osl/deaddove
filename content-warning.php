@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Dead Dove
  * Description: Content warning plugin that blurs content until the user accepts a disclaimer.
- * Version: 2.2.0
+ * Version: 2.3.1
  * License: GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Author: Center for Online Safety and Liberty
@@ -118,8 +118,8 @@ function deaddove_filter_content($content) {
                         <small><a href="#deaddove-warning-settings1">Modify your content warning settings</a></small>
                     </div>
                 </div>
-                <div class="deaddove-blurred-content deaddove-blur">' . $content . '</div>
                 ' . $overlay . '
+                <div class="deaddove-blurred-content deaddove-blur">' . $content . '</div>
             </div>';
 }
 add_filter('the_content', 'deaddove_filter_content');
