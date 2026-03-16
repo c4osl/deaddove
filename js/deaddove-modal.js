@@ -2,6 +2,7 @@ jQuery(document).ready(function ($) {
     $('.deaddove-modal-wrapper').each(function () {
         const wrapper = $(this);
         const blurredContent = wrapper.find('.deaddove-blurred-content');
+        const blurredContentWarning = wrapper.find(".deaddove-blur-overlay");
         const modal = wrapper.find('.deaddove-modal');
         const showContentButton = wrapper.find('.deaddove-show-content-btn');
         const hideContentButton = wrapper.find('.deaddove-hide-content-btn');
@@ -22,6 +23,7 @@ jQuery(document).ready(function ($) {
         showContentButton.on('click', function () {
             modal.hide();
             blurredContent.removeClass('deaddove-blur');
+            if (blurredContentWarning) blurredContentWarning.hide();
         });
 
         // Button to hide the modal
