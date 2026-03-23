@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
   modalWrappers.forEach(function (wrapper) {
     const modal = wrapper.querySelector(".deaddove-modal");
     const blurredContent = wrapper.querySelector(".deaddove-blurred-content");
+    const blurredContentWarning = wrapper.querySelector(".deaddove-blur-overlay");
     const settingsLink = wrapper.querySelector(".deaddove-settings-link");
 
     // Open the modal when blurred content is clicked
@@ -27,6 +28,7 @@ document.addEventListener("DOMContentLoaded", function () {
         modal.style.display = "none";
         blurredContent.classList.remove("deaddove-blur");
         blurredContent.style.pointerEvents = "none";
+        if (blurredContentWarning) blurredContentWarning.style.display = "none";
       } else if (event.target.classList.contains("deaddove-hide-content-btn")) {
         // User chose to keep the content hidden
         modal.style.display = "none";

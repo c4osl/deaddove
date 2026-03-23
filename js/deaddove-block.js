@@ -84,6 +84,7 @@ function initializeModalListeners() {
             const $wrapper = $(this).closest('.deaddove-modal-wrapper');
             $wrapper.find('.deaddove-modal').hide();
             $wrapper.find('.deaddove-blurred-content').removeClass('deaddove-blur');
+            $wrapper.find('.deaddove-blur-overlay').hide();
         });
         
         $(document).on('click.deaddove', '.deaddove-hide-content-btn', function(e) {
@@ -100,8 +101,10 @@ function initializeModalListeners() {
                 if (wrapper) {
                     const modal = wrapper.querySelector('.deaddove-modal');
                     const blurredContent = wrapper.querySelector('.deaddove-blurred-content');
+                    const blurredContentWarning = wrapper.querySelector(".deaddove-blur-overlay");
                     if (modal) modal.style.display = 'none';
                     if (blurredContent) blurredContent.classList.remove('deaddove-blur');
+                    if (blurredContentWarning) blurredContentWarning.style.display = "none";
                 }
             }
             

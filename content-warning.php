@@ -104,6 +104,8 @@ function deaddove_filter_content($content) {
     }
 
     $warning_text = implode('<br><br>', $warnings);
+    $blur_text = get_option('deaddove_blur_text', '');
+    $overlay = !empty($blur_text) ? '<div class="deaddove-blur-overlay">' . esc_html($blur_text) . '</div>' : '';
 
     return '<div class="deaddove-modal-wrapper">
                 <div class="deaddove-modal" style="display:none;">
@@ -116,6 +118,7 @@ function deaddove_filter_content($content) {
                         <small><a href="#deaddove-warning-settings1">Modify your content warning settings</a></small>
                     </div>
                 </div>
+                ' . $overlay . '
                 <div class="deaddove-blurred-content deaddove-blur">' . $content . '</div>
             </div>';
 }
@@ -158,7 +161,6 @@ function deaddove_render_content_warning_block($attributes, $content) {
     // Retrieve user term preferences or default ones.
     $admin_warning_terms = get_option('deaddove_warning_terms', []);
     $user_terms = get_user_meta(get_current_user_id(), 'deaddove_user_warning_terms', true) ?: $admin_warning_terms;
-    $blur_text = get_option('deaddove_blur_text', '');
 
     $warning_texts = [];
     foreach ($term_ids as $term_id) {
@@ -178,6 +180,7 @@ function deaddove_render_content_warning_block($attributes, $content) {
 
     // Create the warning modal with all warnings displayed.
     $all_warnings = implode('<br><br>', $warning_texts);
+    $blur_text = get_option('deaddove_blur_text', '');
     $overlay = !empty($blur_text) ? '<div class="deaddove-blur-overlay">' . esc_html($blur_text) . '</div>' : '';
 
     return '
@@ -562,6 +565,9 @@ function apply_blur_if_enabled($attr, $attachment, $size) {
         }
 
         $all_warnings = implode('<br><br>', $warning_texts);   
+        $blur_text = get_option('deaddove_blur_text', '');
+        $overlay = !empty($blur_text) ? '<div class="deaddove-blur-overlay">' . esc_html($blur_text) . '</div>' : '';
+
         if ($blur_enabled) {
             return '
                <div class="deaddove-modal-wrapper">
@@ -576,9 +582,8 @@ function apply_blur_if_enabled($attr, $attachment, $size) {
                     </div>
                 </div> 
                 <div class="deaddove-blurred-content deaddove-blur">' . $attr    . '</div>
-            </div>  
-                ';
-
+                ' . $overlay . '
+            </div>';
         }
 
     }
