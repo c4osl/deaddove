@@ -27,6 +27,9 @@ document.addEventListener('DOMContentLoaded', function () {
 	mainContainerr.append(newDiv);
 
 	function getContentWarningData(parentActivityIds) {
+		if (!deaddove_ajax.hasBuddyPress) {
+			return Promise.resolve([]);
+		}
 		return new Promise(function (resolve, reject) {
 			const data = {
 				action: 'deaddove_content_warning',
@@ -86,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function () {
 				});
 		});
 	}
-	getCurrentUser()
+	(deaddove_ajax.isLoggedIn ? getCurrentUser() : Promise.resolve(null))
 		.then(function (userData) {
 			if (userData) {
 				// console.log("current User Data:", userData);
@@ -184,6 +187,9 @@ document.addEventListener('DOMContentLoaded', function () {
 This is used for content warning widget in Post
   */
 	jQuery(document).ready(async function ($) {
+		if (!deaddove_ajax.isLoggedIn) {
+			return;
+		}
 		try {
 			const response = await fetchWidgetData();
 			const userTags = response.data.user_content_warning_tag;

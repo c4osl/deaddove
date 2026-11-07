@@ -22,6 +22,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 function deaddove_enqueue_assets() {
     wp_enqueue_style( 'deaddove-style', plugin_dir_url( __FILE__ ) . 'css/deaddove-style.css', array(), filemtime( plugin_dir_path( __FILE__ ) . 'css/deaddove-style.css' ) );
     wp_enqueue_script( 'deaddove-script', plugin_dir_url( __FILE__ ) . 'js/deaddove-script.js', array( 'jquery' ), filemtime( plugin_dir_path( __FILE__ ) . 'js/deaddove-script.js' ), true );
+    wp_localize_script(
+        'deaddove-script',
+        'deaddove_ajax',
+        array(
+            'ajaxurl'       => admin_url( 'admin-ajax.php' ),
+            'nonce'         => wp_create_nonce( 'deaddove_nonce' ),
+            'isLoggedIn'    => is_user_logged_in(),
+            'hasBuddyPress' => function_exists( 'buddypress' ),
+        )
+    );
 
     $blur_amount = get_option( 'deaddove_blur_amount', 8 );
     $custom_css  = "
@@ -1303,23 +1313,6 @@ add_action( 'wp_ajax_nopriv_deaddove_get_post_description', 'deaddove_get_post_d
 
 
 /**
- * Enqueue the frontend script and pass it the AJAX settings.
- */
-function deaddove_enqueue_scripts() {
-    wp_enqueue_script( 'deaddove-frontend-js', plugin_dir_url( __FILE__ ) . 'js/deaddove-script.js', array( 'jquery' ), filemtime( plugin_dir_path( __FILE__ ) . 'js/deaddove-script.js' ), true );
-
-    wp_localize_script(
-        'deaddove-frontend-js',
-        'deaddove_ajax',
-        array(
-            'ajaxurl' => admin_url( 'admin-ajax.php' ),
-            'nonce'   => wp_create_nonce( 'deaddove_nonce' ),
-        )
-    );
-}
-add_action( 'wp_enqueue_scripts', 'deaddove_enqueue_scripts' );
-
-/**
  * Adding content warning field in time line.
  */
 function bboss_add_custom_field_to_activity_form() {
@@ -1496,15 +1489,7 @@ add_action( 'bbp_new_reply', 'save_reply_custom_field' );
  * Getting content warning media tag according to media id.
  */
 function deaddove_script_before_page_loading() {
-    wp_enqueue_script( 'deaddove-modal-js', plugin_dir_url( __FILE__ ) . 'js/deaddove-content-warning.js', array( 'jquery' ), filemtime( plugin_dir_path( __FILE__ ) . 'js/deaddove-content-warning.js' ), true );
-    wp_localize_script(
-        'deaddove-frontend-js',
-        'deaddove_ajax',
-        array(
-            'ajaxurl' => admin_url( 'admin-ajax.php' ),
-            'nonce'   => wp_create_nonce( 'deaddove_nonce' ),
-        )
-    );
+    wp_enqueue_script( 'deaddove-modal-js', plugin_dir_url( __FILE__ ) . 'js/deaddove-content-warning.js', array( 'jquery', 'deaddove-script' ), filemtime( plugin_dir_path( __FILE__ ) . 'js/deaddove-content-warning.js' ), true );
 }
 add_action( 'wp_enqueue_scripts', 'deaddove_script_before_page_loading' );
 
@@ -1527,8 +1512,10 @@ function deaddove_content_warning_ajax_handler() {
     if ( isset( $_POST['activities'] ) && ! empty( $_POST['activities'] ) ) {
         // print_r($_POST['activities']);
         $activities = $_POST['activities'];
-    } else {
+    } elseif ( function_exists( 'bp_activity_get' ) ) {
         $activities = bp_activity_get( $args );
+    } else {
+        wp_send_json_error( array( 'message' => 'No activities available.' ) );
     }
 
     $activity_data = array();
