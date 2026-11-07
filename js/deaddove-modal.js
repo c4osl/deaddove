@@ -1,34 +1,36 @@
 jQuery(document).ready(function ($) {
-    $('.deaddove-modal-wrapper').each(function () {
-        const wrapper = $(this);
-        const blurredContent = wrapper.find('.deaddove-blurred-content');
-        const blurredContentWarning = wrapper.find(".deaddove-blur-overlay");
-        const modal = wrapper.find('.deaddove-modal');
-        const showContentButton = wrapper.find('.deaddove-show-content-btn');
-        const hideContentButton = wrapper.find('.deaddove-hide-content-btn');
+	$('.deaddove-modal-wrapper').each(function () {
+		const wrapper = $(this);
+		const blurredContent = wrapper.find('.deaddove-blurred-content');
+		const blurredContentWarning = wrapper.find('.deaddove-blur-overlay');
+		const modal = wrapper.find('.deaddove-modal');
+		const showContentButton = wrapper.find('.deaddove-show-content-btn');
+		const hideContentButton = wrapper.find('.deaddove-hide-content-btn');
 
-        // Show modal on clicking blurred content
-        blurredContent.on('click', function () {
-            // Reset modal position before showing
-            modal.css({
-                display: 'flex', // Show modal
-                top: '50%',      // Center vertically
-                left: '50%',     // Center horizontally
-                transform: 'translate(-50%, -50%)' // Perfect centering
-            });
-            modal.show(); // Display the modal
-        });
+		// Show modal on clicking blurred content
+		blurredContent.on('click', function () {
+			// Reset modal position before showing
+			modal.css({
+				display: 'flex', // Show modal
+				top: '50%', // Center vertically
+				left: '50%', // Center horizontally
+				transform: 'translate(-50%, -50%)', // Perfect centering
+			});
+			modal.show(); // Display the modal
+		});
 
-        // Button to show content and hide modal
-        showContentButton.on('click', function () {
-            modal.hide();
-            blurredContent.removeClass('deaddove-blur');
-            if (blurredContentWarning) blurredContentWarning.hide();
-        });
+		// Button to show content and hide modal
+		showContentButton.on('click', function () {
+			modal.hide();
+			blurredContent.removeClass('deaddove-blur');
+			if (blurredContentWarning) {
+				blurredContentWarning.hide();
+			}
+		});
 
-        // Button to hide the modal
-        hideContentButton.on('click', function () {
-            modal.hide();
-        });
-    });
+		// Button to hide the modal
+		hideContentButton.on('click', function () {
+			modal.hide();
+		});
+	});
 });
