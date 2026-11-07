@@ -189,7 +189,7 @@ function deaddove_register_content_warning_block() {
             'editor_script'   => 'deaddove-block-script',
             'render_callback' => 'deaddove_render_content_warning_block',
             'attributes'      => array(
-                'terms' => array(
+                'tags' => array(
                     'type'    => 'array', // Changed to 'array' to allow multiple tags.
                     'default' => array(),
                 ),
@@ -248,19 +248,6 @@ function deaddove_render_content_warning_block( $attributes, $content ) {
             ' . $overlay . '
         </div>';
 }
-
-// Register the block with a render callback.
-add_action(
-    'init',
-    function () {
-        register_block_type(
-            'cw/content-warning',
-            array(
-                'render_callback' => 'deaddove_render_content_warning_block',
-            )
-        );
-    }
-);
 
 /**
  * Shortcode for custom content warnings.

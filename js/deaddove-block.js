@@ -6,7 +6,11 @@ const { InnerBlocks } = wp.blockEditor;
 registerBlockType('cw/content-warning', {
 	title: 'Content Warning',
 	icon: 'warning',
-	category: 'design',
+	category: wp.blocks
+		.getCategories()
+		.some((category) => category.slug === 'design')
+		? 'design'
+		: 'common',
 
 	attributes: {
 		tags: {
