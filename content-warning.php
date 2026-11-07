@@ -179,6 +179,54 @@ function deaddove_enqueue_block_editor_assets() {
 }
 add_action( 'enqueue_block_editor_assets', 'deaddove_enqueue_block_editor_assets' );
 
+
+/**
+ * Enqueue the editor toolbar and sidebar controls.
+ */
+function deaddove_enqueue_editor_controls() {
+    wp_enqueue_script(
+        'deaddove-editor-script',
+        plugin_dir_url( __FILE__ ) . 'js/deaddove-editor.js',
+        array( 'wp-api-fetch', 'wp-block-editor', 'wp-components', 'wp-data', 'wp-edit-post', 'wp-editor', 'wp-element', 'wp-plugins', 'wp-rich-text' ),
+        filemtime( plugin_dir_path( __FILE__ ) . 'js/deaddove-editor.js' ),
+        true
+    );
+}
+add_action( 'enqueue_block_editor_assets', 'deaddove_enqueue_editor_controls' );
+
+
+/**
+ * Check whether the current user can edit the post a blur meta value belongs to.
+ *
+ * @param bool   $allowed  Whether the user can edit the meta value.
+ * @param string $meta_key Meta key.
+ * @param int    $post_id  Post ID.
+ * @return bool
+ */
+function deaddove_can_edit_blur_meta( $allowed, $meta_key, $post_id ) {
+    return current_user_can( 'edit_post', $post_id );
+}
+
+
+/**
+ * Expose the featured image blur flag to the block editor.
+ */
+function deaddove_register_blur_meta() {
+    register_post_meta(
+        'post',
+        '_blured_featured_image',
+        array(
+            'type'              => 'integer',
+            'single'            => true,
+            'default'           => 0,
+            'show_in_rest'      => true,
+            'sanitize_callback' => 'absint',
+            'auth_callback'     => 'deaddove_can_edit_blur_meta',
+        )
+    );
+}
+add_action( 'init', 'deaddove_register_blur_meta' );
+
 /**
  * Register the block.
  */
