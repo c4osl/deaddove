@@ -597,6 +597,7 @@ class Blur_Featured_Image_Widget extends WP_Widget {
                             e.preventDefault();
                             var postData = {
                                 action: "save_blur_featured_image",
+                                nonce: deaddove_ajax.nonce,
                                 post_id: $("input[name='post_id']").val(),
                                 _blured_featured_image: $("#blur_featured_image_widget").is(":checked") ? 1 : 0
                             };
@@ -704,26 +705,31 @@ add_action( 'after_setup_theme', 'disable_block_widgets' );
  * Save the blurred featured image setting for a post.
  */
 function save_blur_featured_image() {
+    check_ajax_referer( 'deaddove_nonce', 'nonce' );
+
     if ( ! isset( $_POST['post_id'] ) ) {
         wp_send_json_error( 'Post ID missing' );
     }
 
-    $post_id = intval( $_POST['post_id'] );
+    $post_id = absint( $_POST['post_id'] );
+    $post    = get_post( $post_id );
 
-    if ( isset( $_POST['_blured_featured_image'] ) && $_POST['_blured_featured_image'] == '1' ) {
-
-        update_post_meta( $post_id, '_blured_featured_image', $_POST['_blured_featured_image'] );
-    } else {
-        update_post_meta( $post_id, '_blured_featured_image', 0 );
-
+    if ( ! $post ) {
+        wp_send_json_error( 'Post not found' );
     }
+
+    if ( ! current_user_can( 'edit_post', $post_id ) && get_current_user_id() !== (int) $post->post_author ) {
+        wp_send_json_error( 'Unauthorized action' );
+    }
+
+    $blurred = isset( $_POST['_blured_featured_image'] ) && '1' === $_POST['_blured_featured_image'] ? 1 : 0;
+    update_post_meta( $post_id, '_blured_featured_image', $blurred );
 
     wp_send_json_success( 'Updated successfully' );
 }
 
 // Register AJAX actions.
 add_action( 'wp_ajax_save_blur_featured_image', 'save_blur_featured_image' );
-add_action( 'wp_ajax_nopriv_save_blur_featured_image', 'save_blur_featured_image' ); // For non-logged-in users
 
 
 
@@ -766,6 +772,7 @@ class Custom_User_Widget extends WP_Widget {
 
         if ( is_user_logged_in() ) {
             $user_id = get_current_user_id();
+            $post_id = get_the_ID();
 
             $request_uri = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
             if ( false === strpos( $request_uri, '/add-new-post' ) ) {
@@ -891,55 +898,6 @@ function register_custom_user_widget() {
     register_widget( 'Custom_User_Widget' );
 }
 add_action( 'widgets_init', 'register_custom_user_widget' );
-
-/**
- * Ajax method to update the description.
- */
-function save_user_description() {
-    if ( ! is_user_logged_in() ) {
-        wp_send_json_error( array( 'message' => 'User not logged in' ) );
-    }
-    $user_id = $_POST['user_id'];
-    $post_id = $_POST['post_id'];
-
-    $selected_text = sanitize_text_field( $_POST['selected_text'] ?? '' );
-    $selected_tags = $_POST['tags'] ?? array();
-
-    $post = get_post( $post_id );
-    if ( ! $post_id ) {
-        wp_send_json_error( array( 'message' => 'post  is null' ) );
-    }
-    if ( ! $post || $post->post_author != $user_id ) {
-        wp_send_json_error( array( 'message' => 'Unauthorized action' ) );
-    }
-
-    if ( empty( $selected_text ) ) {
-        wp_send_json_error( array( 'message' => 'No text selected' ) );
-    }
-    $post_content = $post->post_content;
-    if ( strpos( $post_content, $selected_text ) !== false ) {
-        $tags_string  = implode( ',', array_map( 'sanitize_text_field', $selected_tags ) );
-        $wrapped_text = '[content_warning tags="' . esc_attr( $tags_string ) . '"]' . $selected_text . '[/content_warning]';
-
-        $updated_content = str_replace( $selected_text, $wrapped_text, $post_content );
-        wp_update_post(
-            array(
-                'ID'           => $post_id,
-                'post_content' => $updated_content,
-            )
-        );
-        ob_clean();
-        wp_send_json_success( array( 'message' => 'Description updated successfully' ) );
-    } else {
-        ob_clean();
-        wp_send_json_error( array( 'message' => 'Selected text not found in post content' ) );
-    }
-
-    wp_die();
-}
-add_action( 'wp_ajax_save_user_description', 'save_user_description' );
-add_action( 'wp_ajax_nopriv_save_user_description', 'save_user_description' );
-
 
 /**
  * Get User  Dead dove to show the dead dove tag.
@@ -1119,8 +1077,11 @@ function deaddove_display_settings_form() {
                     $('#deaddove-save-message').hide();  
                 },
                 success: function(response) {
-                    $('#deaddove-save-message').show().text(response.message);
-                    location.reload();
+                    if (response.success) {
+                        location.reload();
+                        return;
+                    }
+                    $('#deaddove-save-message').css('color', 'red').text(response.data.message).show();
                 }
             });
         });
@@ -1261,10 +1222,10 @@ function deaddove_get_post_description() {
 
     if ( isset( $_POST['post_id'] ) ) {
         $post_id = intval( $_POST['post_id'] );
-        $tags    = $_POST['postTags'];
+        $tags    = isset( $_POST['postTags'] ) && is_string( $_POST['postTags'] ) ? sanitize_text_field( wp_unslash( $_POST['postTags'] ) ) : '';
 
         $post = get_post( $post_id );
-        if ( $post ) {
+        if ( $post && ( 'publish' === $post->post_status || current_user_can( 'read_post', $post_id ) ) ) {
             if ( ! empty( $tags ) ) {
                 $tags_array       = explode( ',', $tags );
                 $tag_descriptions = array();
@@ -1500,32 +1461,51 @@ function deaddove_content_warning_ajax_handler() {
     if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'deaddove_nonce' ) ) {
         wp_send_json_error( array( 'message' => 'Invalid nonce' ) );
     }
-    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'deaddove_nonce' ) ) {
-        wp_send_json_error( array( 'message' => 'Invalid nonce' ) );
+    $warning_type = isset( $_POST['type'] ) ? sanitize_text_field( wp_unslash( $_POST['type'] ) ) : '';
+    $is_activity  = 'acticityWarning' === $warning_type;
+    if ( $is_activity && ! function_exists( 'bp_activity_get_meta' ) ) {
+        wp_send_json_error( array( 'message' => 'No activities available.' ) );
     }
-    $warningType = $_POST['type'];
-    // print_r($warningType);
     $args = array(
         'per_page' => 100,
         'page'     => 1,
     );
-    if ( isset( $_POST['activities'] ) && ! empty( $_POST['activities'] ) ) {
-        // print_r($_POST['activities']);
-        $activities = $_POST['activities'];
+    if ( ! empty( $_POST['activities'] ) ) {
+        $activities = array_map( 'absint', (array) wp_unslash( $_POST['activities'] ) );
+        if ( $is_activity ) {
+            $found      = bp_activity_get(
+                array(
+                    'in'       => $activities,
+                    'per_page' => count( $activities ),
+                )
+            );
+            $activities = array();
+            foreach ( $found['activities'] as $activity ) {
+                if ( function_exists( 'bb_activity_user_can_view' ) ) {
+                    $can_view = bb_activity_user_can_view( $activity );
+                } else {
+                    $can_view = bp_activity_user_can_read( $activity );
+                }
+                if ( $can_view ) {
+                    $activities[] = (int) $activity->id;
+                }
+            }
+        }
     } elseif ( function_exists( 'bp_activity_get' ) ) {
-        $activities = bp_activity_get( $args );
+        $activities = wp_list_pluck( bp_activity_get( $args )['activities'], 'id' );
     } else {
         wp_send_json_error( array( 'message' => 'No activities available.' ) );
     }
 
     $activity_data = array();
-    foreach ( $activities as $activity ) {
-        // $activity_id = $activity->id;
-        // echo $activity;
-        if ( $warningType == 'acticityWarning' ) {
-            $content_warning_tag = bp_activity_get_meta( intval( $activity ), 'content_warning_tags', true );
+    foreach ( $activities as $activity_id ) {
+        if ( $is_activity ) {
+            $content_warning_tag = bp_activity_get_meta( $activity_id, 'content_warning_tags', true );
         } else {
-            $content_warning_tag = get_post_meta( intval( $activity ), 'content_warning_tags', true );
+            if ( 'publish' !== get_post_status( $activity_id ) && ! current_user_can( 'read_post', $activity_id ) ) {
+                continue;
+            }
+            $content_warning_tag = get_post_meta( $activity_id, 'content_warning_tags', true );
         }
         if ( $content_warning_tag ) {
             $tag_ids          = explode( ',', $content_warning_tag );
@@ -1538,9 +1518,9 @@ function deaddove_content_warning_ajax_handler() {
                     $tag_descriptions[] = $tag->description;
                 }
             }
-            if ( $tag && ! is_wp_error( $tag ) ) {
+            if ( $tag_names ) {
                 $activity_data[] = array(
-                    'activity_id'                 => intval( $activity ),
+                    'activity_id'                 => $activity_id,
                     'content_warning_tag'         => implode( ', ', $tag_names ),
                     'content_warning_description' => implode( ' | ', $tag_descriptions ),
                 );
@@ -1562,9 +1542,6 @@ function get_custom_widget_callback() {
     if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'deaddove_nonce' ) ) {
         wp_die( 'Permission Denied' );
     }
-    if ( ! is_user_logged_in() ) {
-        wp_die( 'Permission Denied' );
-    }
     $user_id  = get_current_user_id();
     $all_tags = get_terms(
         array(
@@ -1573,13 +1550,6 @@ function get_custom_widget_callback() {
         )
     );
 
-    if ( empty( $all_tags ) ) {
-        wp_send_json_error(
-            array(
-                'message' => 'No warning tags available',
-            )
-        );
-    }
     wp_send_json_success(
         array(
             'user_content_warning_tag' => $all_tags,
@@ -1588,7 +1558,6 @@ function get_custom_widget_callback() {
 }
 
 add_action( 'wp_ajax_get_custom_widget', 'get_custom_widget_callback' );
-add_action( 'wp_ajax_nopriv_get_custom_widget', 'get_custom_widget_callback' );
 
 
 /**
@@ -1602,10 +1571,6 @@ function deaddove_current_user_ajax_handler() {
     // Current user ko nikalna.
     $current_user = wp_get_current_user();
 
-    // Check if user is logged in.
-    if ( ! $current_user->exists() ) {
-        wp_send_json_error( array( 'message' => 'User not logged in' ) );
-    }
     // User ki details collect karna.
     $user_data = array(
         'user_id'         => $current_user->ID,
@@ -1625,7 +1590,6 @@ function deaddove_current_user_ajax_handler() {
     wp_send_json_success( $user_data );
 }
 add_action( 'wp_ajax_deaddove_current_user', 'deaddove_current_user_ajax_handler' );
-add_action( 'wp_ajax_nopriv_deaddove_current_user', 'deaddove_current_user_ajax_handler' );
 
 add_filter( 'bbp_template_include', 'myplugin_bbp_template_override' );
 
