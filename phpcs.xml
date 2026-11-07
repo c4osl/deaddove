@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<ruleset name="Dead Dove">
+    <description>WordPress coding standards for the Dead Dove plugin, indented with spaces.</description>
+
+    <file>.</file>
+    <arg name="extensions" value="php"/>
+
+    <exclude-pattern>/buddypress/*</exclude-pattern>
+    <exclude-pattern>/templates/*</exclude-pattern>
+
+    <rule ref="WordPress">
+        <exclude name="Generic.WhiteSpace.DisallowSpaceIndent"/>
+    </rule>
+
+    <rule ref="Generic.WhiteSpace.DisallowTabIndent"/>
+    <rule ref="Generic.WhiteSpace.ScopeIndent">
+        <properties>
+            <property name="indent" value="4"/>
+            <property name="tabIndent" value="false"/>
+        </properties>
+    </rule>
+
+    <rule ref="WordPress.Files.FileName">
+        <exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
+        <exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
+    </rule>
+    <rule ref="Generic.Files.OneObjectStructurePerFile">
+        <exclude name="Generic.Files.OneObjectStructurePerFile.MultipleFound"/>
+    </rule>
+    <rule ref="Universal.Files.SeparateFunctionsFromOO">
+        <exclude name="Universal.Files.SeparateFunctionsFromOO.Mixed"/>
+    </rule>
+</ruleset>

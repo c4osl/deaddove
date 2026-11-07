@@ -1,0 +1,14 @@
+{
+	"name": "dead-dove",
+	"private": true,
+	"scripts": {
+		"lint:js": "eslint js"
+	},
+	"devDependencies": {
+		"@wordpress/eslint-plugin": "^28.1.0",
+		"eslint": "^9.39.5",
+		"globals": "^17.14.0",
+		"prettier": "^3.9.10",
+		"typescript": "^5.9.3"
+	}
+}
