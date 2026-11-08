@@ -93,6 +93,11 @@ A: Yes, you can.
 
 == Changelog ==
 
+### Version 2.3.2
+- Added the overlay text to blurred featured images and blocks.
+- Moved the overlay text to the top when the whole content is blurred.
+- Hid the overlay text once the content is unblurred.
+
 ### Version 2.3
 - Added setting for text overlay on top of the blurred content.
 
