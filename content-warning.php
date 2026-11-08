@@ -1365,6 +1365,116 @@ function deaddove_current_user_ajax_handler() {
 }
 add_action( 'wp_ajax_deaddove_current_user', 'deaddove_current_user_ajax_handler' );
 
+
+/**
+ * Gets the content warning description for an activity.
+ *
+ * @param int $activity_id Activity ID.
+ * @return string Warning descriptions joined with a pipe, or an empty string when none apply.
+ */
+function deaddove_get_activity_meta_description( $activity_id ) {
+    $content_warning_tag = bp_activity_get_meta( intval( $activity_id ), 'content_warning_tags', true );
+    $description         = '';
+    if ( $content_warning_tag ) {
+        $tag_ids          = explode( ',', $content_warning_tag );
+        $tag_descriptions = array();
+        foreach ( $tag_ids as $tag_id ) {
+            $tag = get_term( intval( $tag_id ), 'content_warning' );
+            if ( $tag && ! is_wp_error( $tag ) ) {
+                $tag_descriptions[] = $tag->description;
+            }
+        }
+        if ( ! empty( $tag_descriptions ) ) {
+            $description = implode( ' | ', $tag_descriptions );
+        }
+    } else {
+        $activity = new BP_Activity_Activity( $activity_id );
+        if ( ! empty( $activity ) ) {
+
+            $post_id = $activity->item_id;
+            if ( $post_id ) {
+                $tag_ids = get_post_meta( $post_id, 'forum_content_warning_tags', true );
+                if ( empty( $tag_ids ) ) {
+                    return $description;
+                }
+                if ( is_string( $tag_ids ) ) {
+                    $tag_ids = explode( ',', $tag_ids );
+                }
+                if ( is_array( $tag_ids ) ) {
+                    $post_descriptions = array();
+                    foreach ( $tag_ids as $tag_id ) {
+                        $tag_id = intval( $tag_id );
+                        if ( $tag_id && term_exists( $tag_id, 'content_warning' ) ) {
+                            $term = get_term( $tag_id, 'content_warning' );
+                            if ( ! is_wp_error( $term ) && ! empty( $term->description ) ) {
+                                $post_descriptions[] = $term->description;
+                            }
+                        }
+                    }
+                    if ( ! empty( $post_descriptions ) ) {
+                        $description = implode( ' | ', $post_descriptions );
+                    }
+                }
+            }
+        }
+    }
+    return $description;
+}
+
+
+/**
+ * Opens the warning wrapper around an activity's content when it has a content warning.
+ */
+function deaddove_open_activity_warning() {
+    $description = deaddove_get_activity_meta_description( bp_get_activity_id() );
+    if ( $description ) {
+        echo '<div class="dd-forum-warning"><p class="blur-description" style="display:none">' . wp_kses_post( $description ) . '</p>';
+    }
+}
+add_action( 'bp_before_activity_activity_content', 'deaddove_open_activity_warning' );
+
+/**
+ * Closes the wrapper opened by deaddove_open_activity_warning().
+ */
+function deaddove_close_activity_warning() {
+    if ( deaddove_get_activity_meta_description( bp_get_activity_id() ) ) {
+        echo '</div>';
+    }
+}
+add_action( 'bp_after_activity_activity_content', 'deaddove_close_activity_warning' );
+
+/**
+ * Prints the content warning modal after the first page of the activity loop.
+ */
+function deaddove_render_activity_modal() {
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Reads the page number only.
+    $page = isset( $_POST['page'] ) ? absint( $_POST['page'] ) : 1;
+    if ( 1 !== $page ) {
+        return;
+    }
+
+    if ( is_user_logged_in() ) {
+        $url = trailingslashit( bp_core_get_user_domain( get_current_user_id() ) ) . 'settings/content-warning-settings/';
+    } else {
+        $url = wp_login_url( home_url( '/members/me/settings/content-warning-settings/' ) );
+    }
+    ?>
+    <div class="deaddove-forums-modal-wrapper">
+        <div class="deaddove-modal" style="display:none">
+            <div class="deaddove-modal-content">
+                <p class="description-text">Data not available</p>
+                <div class="modal-buttons">
+                    <button class="deaddove-show-content-btn">Show this content</button>
+                    <button class="deaddove-hide-content-btn">Keep it hidden</button>
+                </div>
+                <small><a href="<?php echo esc_url( $url ); ?>" class="deaddove-settings-link">Modify your content warning settings</a></small>
+            </div>
+        </div>
+    </div>
+    <?php
+}
+add_action( 'bp_after_activity_loop', 'deaddove_render_activity_modal' );
+
 add_filter( 'bbp_template_include', 'myplugin_bbp_template_override' );
 
 /**
