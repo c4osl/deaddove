@@ -3,8 +3,8 @@ Contributors: c4osl
 Donate link: https://c4osl.org/support-us/
 Tags: content warning, sensitive content, shortcode, tags  
 Requires at least: 5.0  
-Tested up to: 6.8
-Stable tag: 2.3.2
+Tested up to: 7.1
+Stable tag: 2.3.3
 Requires PHP: 7.2  
 License: GPLv2 or later  
 License URI: https://www.gnu.org/licenses/gpl-2.0.html  
@@ -92,6 +92,13 @@ A: Yes, you can.
 6. [BuddyBoss Activity screen]![screenshot-6](assets/screenshot-6.png) 
 
 == Changelog ==
+
+### Version 2.3.3
+- Added permission checks to the AJAX endpoints, and activity warnings now respect BuddyBoss privacy settings.
+- Escaped the shortcode tags attribute.
+- Fixed errors on sites that don't have BuddyPress active.
+- Fixed the Content Warning block registration.
+- Removed unused code and debug logging.
 
 ### Version 2.3.2
 - Added the overlay text to blurred featured images and blocks.
