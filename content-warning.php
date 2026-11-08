@@ -949,17 +949,11 @@ class DeadDove_Widget extends WP_Widget {
     public function widget( $args, $instance ) {
         $current_user = wp_get_current_user();
 
-        $url = '#';
-
-        if ( $current_user->exists() && function_exists( 'bp_core_get_user_domain' ) ) {
-
-            $url = trailingslashit( bp_core_get_user_domain( $current_user->ID ) ) . 'settings/content-warning-settings/';
+        $member_url = $current_user->exists() ? deaddove_get_member_url( $current_user->ID ) : '';
+        if ( $member_url ) {
+            $url = trailingslashit( $member_url ) . 'settings/content-warning-settings/';
         } else {
-            $redirect_to = home_url( '/members/me/settings/content-warning-settings/' );
-            if ( function_exists( 'bp_core_get_user_domain' ) && $current_user->exists() ) {
-                $redirect_to = trailingslashit( bp_core_get_user_domain( $current_user->ID ) ) . 'settings/content-warning-settings/';
-            }
-            $url = wp_login_url( $redirect_to );
+            $url = wp_login_url( home_url( '/members/me/settings/content-warning-settings/' ) );
         }
         $warning_text = ! empty( $instance['warning_text'] ) ? $instance['warning_text'] : __( 'This content may not be suitable for all audiences.', 'deaddove' );
         ?>
@@ -1354,7 +1348,7 @@ function deaddove_current_user_ajax_handler() {
         'profile_url'     => get_author_posts_url( $current_user->ID ), // WordPress author profile link.
         'registered_date' => $current_user->user_registered,
         // Agar BuddyPress use kar rahe ho, to BuddyPress profile link.
-        'bp_profile_url'  => function_exists( 'bp_core_get_user_domain' ) ? bp_core_get_user_domain( $current_user->ID ) : '',
+        'bp_profile_url'  => deaddove_get_member_url( $current_user->ID ),
         // Aur bhi fields add kar sakte ho, jaise first_name, last_name, etc.
         'first_name'      => get_user_meta( $current_user->ID, 'first_name', true ),
         'last_name'       => get_user_meta( $current_user->ID, 'last_name', true ),
@@ -1444,6 +1438,22 @@ function deaddove_close_activity_warning() {
 add_action( 'bp_after_activity_activity_content', 'deaddove_close_activity_warning' );
 
 /**
+ * Returns a member's profile URL, or an empty string when BuddyPress is missing.
+ *
+ * @param int $user_id User ID.
+ * @return string Profile URL.
+ */
+function deaddove_get_member_url( $user_id ) {
+    if ( function_exists( 'bp_members_get_user_url' ) ) {
+        return bp_members_get_user_url( $user_id );
+    }
+    if ( function_exists( 'bp_core_get_user_domain' ) ) {
+        return bp_core_get_user_domain( $user_id );
+    }
+    return '';
+}
+
+/**
  * Prints the content warning modal after the first page of the activity loop.
  */
 function deaddove_render_activity_modal() {
@@ -1454,7 +1464,7 @@ function deaddove_render_activity_modal() {
     }
 
     if ( is_user_logged_in() ) {
-        $url = trailingslashit( bp_core_get_user_domain( get_current_user_id() ) ) . 'settings/content-warning-settings/';
+        $url = trailingslashit( deaddove_get_member_url( get_current_user_id() ) ) . 'settings/content-warning-settings/';
     } else {
         $url = wp_login_url( home_url( '/members/me/settings/content-warning-settings/' ) );
     }

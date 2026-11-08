@@ -52,17 +52,11 @@ if ( ! function_exists( 'buddyboss_bbpress' ) && 'left' == $sidebar_position ) {
     <main id="main" class="site-main site-custom-plugin-main">
         <?php 
           $current_user = wp_get_current_user();
-        $url = '#';
-        if ($current_user->exists() && function_exists('bp_core_get_user_domain')) {
-             
-            $url = trailingslashit(bp_core_get_user_domain($current_user->ID)) . 'settings/content-warning-settings/';
-        }
-        else {
-            $redirect_to = home_url('/members/me/settings/content-warning-settings/');  
-            if (function_exists('bp_core_get_user_domain') && $current_user->exists()) {
-                $redirect_to = trailingslashit(bp_core_get_user_domain($current_user->ID)) . 'settings/content-warning-settings/';
-            }
-            $url = wp_login_url($redirect_to);  
+        $member_url = $current_user->exists() ? deaddove_get_member_url($current_user->ID) : '';
+        if ($member_url) {
+            $url = trailingslashit($member_url) . 'settings/content-warning-settings/';
+        } else {
+            $url = wp_login_url(home_url('/members/me/settings/content-warning-settings/'));
         }
         ?>
     <div class="deaddove-forums-modal-wrapper">
