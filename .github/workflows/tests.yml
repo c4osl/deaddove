@@ -1,0 +1,40 @@
+name: Tests
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+
+jobs:
+    phpunit:
+        name: PHPUnit on PHP ${{ matrix.php }} and WordPress ${{ matrix.wp }}
+        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - php: "8.3"
+                      wp: latest
+                      core: ""
+                    - php: "7.4"
+                      wp: "5.9"
+                      core: WordPress/WordPress#5.9
+        env:
+            WP_ENV_PHP_VERSION: ${{ matrix.php }}
+            WP_ENV_CORE: ${{ matrix.core }}
+            PLUGIN_DIR: wp-content/plugins/${{ github.event.repository.name }}
+        steps:
+            - uses: actions/checkout@v4.2.2
+
+            - uses: actions/setup-node@v4.4.0
+              with:
+                  node-version: 22
+
+            - name: Start WordPress
+              run: npx --yes @wordpress/env@12.1.0 start
+
+            - name: Install PHP dependencies
+              run: npx @wordpress/env@12.1.0 run tests-cli --env-cwd="$PLUGIN_DIR" composer install --no-interaction --no-progress
+
+            - name: Run PHPUnit
+              run: npx @wordpress/env@12.1.0 run tests-cli --env-cwd="$PLUGIN_DIR" vendor/bin/phpunit
