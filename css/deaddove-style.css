@@ -54,12 +54,6 @@
     width: fit-content;
 }
 
-.widget.widget_custom_user_widget {
-    display: none;
-    position: absolute;
-    top: 40%;
-    left: 50%;
-}
 .deaddove-block-description {
     filter: blur(5px);
     cursor: pointer;
