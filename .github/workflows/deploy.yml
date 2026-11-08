@@ -1,0 +1,35 @@
+name: Deploy to WordPress.org
+
+on:
+    release:
+        types: [published]
+    workflow_dispatch:
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4.2.2
+
+            - name: Read version
+              id: version
+              run: |
+                  stable_tag=$(grep -i '^Stable tag:' readme.txt | sed -E 's/^[Ss]table [Tt]ag:[[:space:]]*//' | tr -d '\r' | xargs)
+                  header_version=$(grep -m1 -E '^[[:space:]]*\*[[:space:]]*Version:' content-warning.php | sed -E 's/^.*Version:[[:space:]]*//' | tr -d '\r' | xargs)
+                  if [ "$stable_tag" != "$header_version" ]
+                  then
+                      echo "Stable tag ($stable_tag) does not match the plugin header version ($header_version)."
+                      exit 1
+                  fi
+                  echo "value=$stable_tag" >> "$GITHUB_OUTPUT"
+
+            - name: Deploy
+              uses: 10up/action-wordpress-plugin-deploy@2.3.0
+              with:
+                  dry-run: ${{ github.event_name == 'workflow_dispatch' }}
+              env:
+                  SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+                  SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+                  SLUG: dead-dove
+                  VERSION: ${{ steps.version.outputs.value }}
+                  ASSETS_DIR: assets
