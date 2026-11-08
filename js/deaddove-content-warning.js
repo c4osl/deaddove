@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
 			};
 			jQuery
 				.post(deaddove_ajax.ajaxurl, data, function (response) {
-					if (response.success) {
+					if (response && response.success) {
 						response.data.activities.forEach(function (activity) {
 							processedActivityIds.add(
 								activity.activity_id.toString()
@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 						resolve(response.data.activities);
 					} else {
-						reject('Error: ' + response.data.message);
+						reject('Error: ' + (response && response.data ? response.data.message : 'Unexpected response'));
 					}
 				})
 				.fail(function () {
@@ -78,10 +78,10 @@ document.addEventListener('DOMContentLoaded', function () {
 					nonce: deaddove_ajax.nonce,
 				})
 				.done(function (response) {
-					if (response.success) {
+					if (response && response.success) {
 						resolve(response.data);
 					} else {
-						reject('Error: ' + response.data.message);
+						reject('Error: ' + (response && response.data ? response.data.message : 'Unexpected response'));
 					}
 				})
 				.fail(function () {
