@@ -286,7 +286,7 @@ function deaddove_content_warning_shortcode( $atts, $content = null ) {
 
     $request_uri = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
     if ( false !== strpos( $request_uri, '/add-new-post' ) ) {
-        return '<p class="deaddove-block-description" tags="' . $atts['tags'] . '">' . $content . '</p><br>';
+        return '<p class="deaddove-block-description" tags="' . esc_attr( $atts['tags'] ) . '">' . $content . '</p><br>';
     }
     $has_block_content = preg_match( '/<\s*(div|p|h[1-6]|ul|ol|li|table|blockquote|pre|figure|section|article)/i', $content );
 
