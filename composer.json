@@ -1,0 +1,18 @@
+{
+    "name": "c4osl/dead-dove",
+    "description": "Content warning plugin that blurs content until the user accepts a disclaimer.",
+    "license": "GPL-2.0-or-later",
+    "type": "wordpress-plugin",
+    "require-dev": {
+        "phpunit/phpunit": "^9.6",
+        "yoast/phpunit-polyfills": "^3.0"
+    },
+    "config": {
+        "platform": {
+            "php": "7.4"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
+    }
+}
